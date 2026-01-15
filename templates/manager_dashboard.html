@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Manager Dashboard</title>
+</head>
+<body>
+
+<h2>Manager Dashboard</h2>
+
+<!-- CREATE TASK -->
+<h3>Create & Assign Task</h3>
+<form method="POST" action="/create-task">
+    <input type="text" name="title" placeholder="Task Title" required>
+    <select name="employee_id">
+        {% for emp in employees %}
+        <option value="{{ emp._id }}">{{ emp.name }}</option>
+        {% endfor %}
+    </select>
+    <select name="priority">
+        <option>Low</option>
+        <option>Medium</option>
+        <option>High</option>
+    </select>
+    <input type="date" name="deadline" required>
+    <button type="submit">Assign</button>
+</form>
+
+<hr>
+
+<!-- TEAM PRODUCTIVITY -->
+<h3>Team Productivity</h3>
+<table border="1" cellpadding="10">
+<tr>
+    <th>Employee</th>
+    <th>Productivity Score</th>
+</tr>
+{% for p in productivity %}
+<tr>
+    <td>{{ p.name }}</td>
+    <td>{{ p.score }}</td>
+</tr>
+{% endfor %}
+</table>
+
+<hr>
+
+<!-- WORKLOAD BALANCE -->
+<h3>Workload Balance</h3>
+<ul>
+{% for w in workload %}
+    <li>{{ w.name }} – {{ w.task_count }} tasks</li>
+{% endfor %}
+</ul>
+
+<hr>
+
+<!-- TOP & LOW PERFORMERS -->
+<h3>Top Performers</h3>
+<ul>
+{% for t in top_performers %}
+    <li>{{ t.name }} ({{ t.score }})</li>
+{% endfor %}
+</ul>
+
+<h3>Low Performers</h3>
+<ul>
+{% for l in low_performers %}
+    <li>{{ l.name }} ({{ l.score }})</li>
+{% endfor %}
+</ul>
+
+<hr>
+
+<!-- REPORTS -->
+<h3>Reports & Analytics</h3>
+<p>Weekly & Monthly performance analysis available</p>
+
+<a href="/logout">Logout</a>
+
+</body>
+</html>

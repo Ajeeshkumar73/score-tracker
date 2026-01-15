@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Employee Dashboard</title>
+</head>
+<body>
+
+<h2>Employee Dashboard</h2>
+
+<!-- Productivity Score -->
+<h3>Your Productivity Score: <span style="color:green">{{ score }}</span></h3>
+
+<!-- Task Recommendations -->
+<h3>Recommended Task</h3>
+<p>{{ recommendation }}</p>
+
+<hr>
+
+<!-- Assigned Tasks -->
+<h3>Your Tasks</h3>
+
+<table border="1" cellpadding="10">
+<tr>
+    <th>Task</th>
+    <th>Priority</th>
+    <th>Status</th>
+    <th>Action</th>
+</tr>
+
+{% for task in tasks %}
+<tr>
+    <td>{{ task.title }}</td>
+    <td>{{ task.priority }}</td>
+    <td>{{ task.status }}</td>
+    <td>
+        {% if task.status == "Pending" %}
+        <a href="/start-task/{{ task._id }}">Start</a>
+        {% elif task.status == "In Progress" %}
+        <a href="/end-task/{{ task._id }}">End</a>
+        {% else %}
+        Completed
+        {% endif %}
+    </td>
+</tr>
+{% endfor %}
+</table>
+
+<br>
+<a href="/logout">Logout</a>
+
+</body>
+</html>

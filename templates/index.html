@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>ProdAI | Maximize Team Potential</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              colors: {
+                "primary": "black",
+                "background-light": "#f6f8f8",
+                "background-dark": "#101d22",
+                "navy-dark": "#0d181b",
+                "teal-muted": "#4c869a",
+                "border-soft": "#cfe1e7"
+              },
+              fontFamily: {
+                "display": ["Inter", "sans-serif"]
+              },
+              borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+            },
+          },
+        }
+      </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-navy-dark dark:text-white transition-colors duration-200">
+<div class="relative flex min-h-screen w-full flex-col overflow-x-hidden">
+<!-- Navigation Bar -->
+<header class="sticky top-0 z-50 w-full border-b border-border-soft dark:border-white/10 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-md">
+<div class="mx-auto max-w-[1200px] px-6 lg:px-10 py-4 flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="text-primary">
+</div>
+<h2 class="text-xl font-bold tracking-tight">Score Tracker</h2>
+</div>
+<nav class="hidden md:flex items-center gap-10">
+<!--<a class="text-sm font-semibold hover:text-primary transition-colors" href="#">Product</a>
+<a class="text-sm font-semibold hover:text-primary transition-colors" href="#">Solutions</a>
+<a class="text-sm font-semibold hover:text-primary transition-colors" href="#">Pricing</a>-->
+</nav>
+<div class="flex items-center gap-4">
+<a href="#" class="hidden sm:block text-sm font-bold hover:text-primary transition-colors">Home</a>
+<a href="#solutions" class="hidden sm:block text-sm font-bold hover:text-primary transition-colors">Solutions</a>
+<a href="/login" ><button class="bg-primary text-white px-5 py-2.5 rounded-lg text-sm font-bold hover:brightness-110 transition-all shadow-sm">
+                        Login
+                    </button></a>
+</div>
+</div>
+</header>
+<main class="flex-1">
+<!-- Hero Section -->
+<section class="mx-auto max-w-[1200px] px-6 lg:px-10 py-16 lg:py-24">
+<div class="grid lg:grid-cols-2 gap-12 items-center">
+<div class="flex flex-col gap-8 max-w-[580px]">
+<div class="space-y-4">
+<h2 class="text-4xl lg:text-6xl font-black leading-[1.1] tracking-tight text-gray-700 dark:text-white">
+                                Maximize Team Potential with <span class="text-primary">AI-Driven</span> Insights
+                            </h2>
+<p class="text-lg lg:text-xl text-teal-muted dark:text-slate-400 font-normal leading-relaxed">
+                                Empower your workforce with real-time data, automated task prioritization, and intelligent workload management.
+                            </p>
+</div>
+<div class="flex flex-col sm:flex-row gap-4">
+</div>
+</div>
+<div class="relative group">
+<div class="absolute -inset-1 bg-gradient-to-r from-primary/30 to-teal-muted/30 rounded-xl blur opacity-25 group-hover:opacity-50 transition duration-1000"></div>
+<div class="relative bg-white dark:bg-[#1a2b32] rounded-xl border border-border-soft dark:border-white/10 shadow-2xl overflow-hidden aspect-video bg-cover bg-center" data-alt="Modern 3D dashboard showing productivity analytics and team performance charts" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDQtcEBfmU_u8ng18RCG5U28Ysb4XpwwhNPjgyu6dzToCOJuUh9zZDHluyFprD14Kuo4qy-leziX4dtbeq_VKavpeS20XsNiADAD40wDFVp7BCKWWse9QLhXuAkAUjpQvXPIel5R-pMrCbJdBm6ys0un7RhF8RzWm18ncVLYHvNaw03VcAtqyy2WSLs6WHq-4vrltjbaKUJumDdBSY7LM6j7kexgEEiJwbN6tAQI8EHo8Z4kyIp6EK_SW8-yFAJFGiolk8cA44XmaY");'>
+</div>
+</div>
+</div>
+</section>
+<!-- Feature Section -->
+<section id="solutions" class="bg-white/50 dark:bg-black/10 py-24">
+<div class="mx-auto max-w-[1200px] px-6 lg:px-10">
+<div class="mb-16 max-w-[800px]">
+<h2 class="text-3xl lg:text-4xl font-black tracking-tight text-navy-dark dark:text-white mb-4">
+                            Intelligent Features for Modern Teams
+                        </h2>
+<p class="text-lg text-teal-muted dark:text-slate-400">
+                            Our AI-driven platform provides the tools you need to stay ahead of the curve and keep your team performing at its best.
+                        </p>
+</div>
+<div class="grid md:grid-cols-3 gap-6">
+<!-- Card 1 -->
+<div class="group flex flex-col gap-6 p-8 rounded-xl border border-border-soft dark:border-white/10 bg-background-light dark:bg-background-dark hover:border-primary/50 transition-all duration-300">
+<div class="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-3xl">bar_chart</span>
+</div>
+<div class="space-y-2">
+<h3 class="text-xl font-bold">Real-time Productivity Scoring</h3>
+<p class="text-teal-muted dark:text-slate-400 leading-relaxed">
+                                    Track performance metrics as they happen with automated data collection and deep-learning analysis.
+                                </p>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="group flex flex-col gap-6 p-8 rounded-xl border border-border-soft dark:border-white/10 bg-background-light dark:bg-background-dark hover:border-primary/50 transition-all duration-300">
+<div class="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-3xl">auto_fix_high</span>
+</div>
+<div class="space-y-2">
+<h3 class="text-xl font-bold">Smart Task Recommendations</h3>
+<p class="text-teal-muted dark:text-slate-400 leading-relaxed">
+                                    AI-powered suggestions to keep your team focused on what matters most, reducing decision fatigue.
+                                </p>
+</div>
+</div>
+<!-- Card 3 -->
+<div class="group flex flex-col gap-6 p-8 rounded-xl border border-border-soft dark:border-white/10 bg-background-light dark:bg-background-dark hover:border-primary/50 transition-all duration-300">
+<div class="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-3xl">balance</span>
+</div>
+<div class="space-y-2">
+<h3 class="text-xl font-bold">Workload Balancing</h3>
+<p class="text-teal-muted dark:text-slate-400 leading-relaxed">
+                                    Prevent burnout by distributing tasks intelligently across the entire team based on current capacity.
+                                </p>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- CTA Section -->
+<section class="mx-auto max-w-[1200px] px-6 lg:px-10 py-24">
+<div class="relative bg-navy-dark rounded-[2rem] overflow-hidden p-8 lg:p-20 text-center">
+<!-- Subtle background decoration -->
+<div class="absolute top-0 right-0 w-96 h-96 bg-primary/20 rounded-full blur-[120px] -mr-48 -mt-48"></div>
+<div class="absolute bottom-0 left-0 w-96 h-96 bg-teal-muted/10 rounded-full blur-[120px] -ml-48 -mb-48"></div>
+<div class="relative z-10 flex flex-col items-center gap-8">
+<h2 class="text-3xl lg:text-5xl font-black text-white max-w-[800px] leading-tight tracking-tight">
+                            Ready to transform your team's workflow?
+                        </h2>
+<p class="text-lg lg:text-xl text-slate-400 max-w-[600px]">
+                            Join thousands of high-performing teams using ProdAI to maximize their potential and deliver results faster.
+                        </p>
+<div class="flex flex-col sm:flex-row gap-4 mt-4">
+<a href="/register" ><button class="bg-white text-primary px-10 py-4 rounded-lg text-lg font-bold hover:brightness-110 transition-all shadow-xl shadow-primary/20">
+                                Get Started Now
+                            </button></a>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="border-t border-border-soft dark:border-white/10 py-16">
+<div class="mx-auto max-w-[1200px] px-6 lg:px-10">
+<div class="flex flex-col md:flex-row items-center justify-between gap-10">
+<div class="flex items-center gap-3">
+<div class="text-primary">
+</div>
+<span class="text-xl font-bold">Score Tracker</span>
+</div>
+<div class="flex flex-wrap justify-center gap-8 lg:gap-12">
+<a class="text-sm font-medium text-teal-muted hover:text-primary transition-colors" href="#">Privacy Policy</a>
+<a class="text-sm font-medium text-teal-muted hover:text-primary transition-colors" href="#">Terms of Service</a>
+<a class="text-sm font-medium text-teal-muted hover:text-primary transition-colors" href="#">Contact Us</a>
+<a class="text-sm font-medium text-teal-muted hover:text-primary transition-colors" href="#">Documentation</a>
+</div>
+<div class="flex items-center gap-5">
+<a class="text-teal-muted hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined text-2xl">public</span>
+</a>
+<a class="text-teal-muted hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined text-2xl">share</span>
+</a>
+</div>
+</div>
+<div class="mt-16 pt-8 border-t border-border-soft dark:border-white/5 text-center md:text-left">
+<p class="text-sm text-teal-muted/60 dark:text-slate-500">
+                        © 2026 Score Tracker Inc. All rights reserved. Designed for excellence in professional productivity.
+                    </p>
+</div>
+</div>
+</footer>
+</div>
+</body></html>
