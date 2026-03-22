@@ -7,7 +7,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
 from bson import ObjectId
 import numpy as np
-import joblib
+import joblib, os
 from flask_mail import Mail, Message
 
 from flask_socketio import SocketIO, emit, join_room
@@ -48,9 +48,10 @@ notifications = db.notifications
 app.config["MAIL_SERVER"] = "smtp.gmail.com"
 app.config["MAIL_PORT"] = 587
 app.config["MAIL_USE_TLS"] = True
-app.config["MAIL_USERNAME"] = "scoretracker6@gmail.com"
-app.config["MAIL_PASSWORD"] = "ahph xvct asjq kouh" 
-app.config["MAIL_DEFAULT_SENDER"] = "scoretracker6@gmail.com"
+app.config["MAIL_USERNAME"] = os.environ.get("MAIL_USERNAME")
+app.config["MAIL_PASSWORD"] = os.environ.get("MAIL_PASSWORD")
+app.config["MAIL_DEFAULT_SENDER"] = os.environ.get("MAIL_USERNAME")
+
 
 mail = Mail(app)
 
