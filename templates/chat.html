@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Score Tracker | Task Chat</title>
+
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet"/>
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+
+<style>
+
+
+.custom-scrollbar {
+  scrollbar-width: none;      
+  -ms-overflow-style: none;     
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  display: none;          
+}
+
+</style>
+</head>
+
+<body class="bg-gray-50 font-[Inter] h-screen overflow-hidden">
+
+<div class="flex flex-col h-full">
+
+<!-- HEADER -->
+<header class="h-20 border-b px-8 flex items-center justify-between">
+  <div>
+    <h2 class="text-xl font-bold">{{ task.task_name }}</h2>
+    <p class="text-xs text-gray-400">
+      Status: <b>{{ task.status }}</b> |
+      {% if session["role"] == "manager" %}
+        Employee: <b>{{ employee.name }}</b>
+      {% else %}
+        Manager Chat
+      {% endif %}
+    </p>
+  </div>
+
+  <!-- BACK BUTTON -->
+  <a href="{% if session['role']=='manager' %}/manager{% else %}/employee{% endif %}"
+     class="text-sm font-semibold  underline-offset-4 hover:text-black">
+    Back
+  </a>
+</header>
+
+
+<!-- CHAT BODY -->
+<div id="chat-box" class="flex-1 overflow-y-auto px-8 py-6 flex flex-col gap-6 custom-scrollbar max-w-2xl mx-auto w-full">
+
+{% for m in messages %}
+  {% if m.sender_role == "manager" %}
+    <div class="max-w-[70%]">
+      <div class="text-xs text-gray-400 font-bold mb-1">Manager</div>
+      <div class="bg-gray-100 p-2 rounded-xl">
+        {{ m.message }}
+      </div>
+    </div>
+  {% else %}
+    <div class="max-w-[70%] self-end text-right">
+      <div class="text-xs text-gray-400 font-bold mb-1">Employee</div>
+      <div class="bg-black text-white p-2 rounded-xl">
+        {{ m.message }}
+      </div>
+    </div>
+  {% endif %}
+{% endfor %}
+
+</div>
+
+<!-- INPUT -->
+<footer class="p-4 border-t">
+  <div class="flex gap-2 max-w-2xl mx-auto">
+    <input id="msg" 
+           class="flex-1 border px-3 py-2 rounded-lg text-sm"
+           placeholder="Type message...">
+
+    <button onclick="send()" 
+            class="bg-black text-white px-4 py-2 rounded-lg text-sm">
+      Send
+    </button>
+  </div>
+</footer>
+
+
+</div>
+
+<!-- SOCKET SCRIPT (YOUR EXACT LOGIC) -->
+<script>
+const socket = io();
+
+socket.emit("join", {task_id: "{{ task._id }}"});
+
+function send() {
+  const msg = document.getElementById("msg").value;
+  if(!msg) return;
+
+  socket.emit("send_message", {
+    task_id: "{{ task._id }}",
+    sender: "{{ session['name'] }}",
+    role: "{{ session['role'] }}",
+    message: msg
+  });
+
+  document.getElementById("msg").value = "";
+}
+
+socket.on("receive_message", data => {
+  const box = document.getElementById("chat-box");
+
+  if(data.sender_role === "manager") {
+    box.innerHTML += `
+      <div class="max-w-[70%]">
+        <div class="text-xs text-gray-400 font-bold mb-1">Manager</div>
+        <div class="bg-gray-100 p-3 rounded-xl">${data.message}</div>
+      </div>`;
+  } else {
+    box.innerHTML += `
+      <div class="max-w-[70%] self-end text-right">
+        <div class="text-xs text-gray-400 font-bold mb-1">Employee</div>
+        <div class="bg-black text-white p-3 rounded-xl">${data.message}</div>
+      </div>`;
+  }
+
+  box.scrollTop = box.scrollHeight;
+});
+</script>
+
+</body>
+</html>

@@ -2,147 +2,231 @@
 <html class="light" lang="en"><head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Login - TechFlow Employee Management</title>
+<title>ProdAI | Employee Task History</title>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
 <script id="tailwind-config">
-      tailwind.config = {
-        darkMode: "class",
-        theme: {
-          extend: {
-            colors: {
-              "primary": "#000000",
-              "employee-accent": "#000000",
-              "background-light": "#f6f7f8",
-              "background-dark": "#0a0a0a",
-              "charcoal": "#1a1a1a"
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              colors: {
+                "primary": "#000000",
+                "background-light": "#fcfcfc",
+                "border-soft": "#e5e7eb",
+                "muted-text": "#6b7280"
+              },
+              fontFamily: {
+                "sans": ["Inter", "sans-serif"]
+              },
+              borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
             },
-            fontFamily: {
-              "display": ["Inter", "sans-serif"]
-            },
-            borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
           },
-        },
-      }
+        }
     </script>
-<style type="text/tailwindcss">.role-manager:checked ~ .auth-card .btn-primary { background-color: #000000; }
-        .role-employee:checked ~ .auth-card .btn-primary { background-color: #000000; }.role-manager:checked ~ .auth-card input:focus { border-color: #000000; --tw-ring-color: #000000; }
-        .role-employee:checked ~ .auth-card input:focus { border-color: #000000; --tw-ring-color: #000000; }
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
     </style>
 </head>
-<body class="bg-background-light dark:bg-background-dark font-display min-h-screen flex flex-col">
-<header class="w-full flex items-center justify-between whitespace-nowrap border-b border-solid border-[#e7edf3] dark:border-zinc-800 px-6 md:px-10 py-3 bg-white dark:bg-background-dark z-10">
-<div class="flex items-center gap-4 text-[#0d141b] dark:text-white">
-<div class="size-6 text-black dark:text-white">
-<svg fill="currentColor" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-<path d="M24 4C25.7818 14.2173 33.7827 22.2182 44 24C33.7827 25.7818 25.7818 33.7827 24 44C22.2182 33.7827 14.2173 25.7818 4 24C14.2173 22.2182 22.2182 14.2173 24 4Z"></path>
+<body class="bg-background-light font-sans text-black">
+<div class="relative flex min-h-screen w-full flex-col overflow-x-hidden">
+<header class="sticky top-0 z-50 w-full border-b border-border-soft bg-white/80 backdrop-blur-md">
+<div class="mx-auto max-w-[1400px] px-6 lg:px-10 py-4 flex items-center justify-between">
+<div class="flex items-center gap-8">
+<div class="flex items-center gap-3">
+<div class="text-primary">
+<svg class="w-8 h-8" fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+<path d="M42.1739 20.1739L27.8261 5.82609C29.1366 7.13663 28.3989 10.1876 26.2002 13.7654C24.8538 15.9564 22.9595 18.3449 20.6522 20.6522C18.3449 22.9595 15.9564 24.8538 13.7654 26.2002C10.1876 28.3989 7.13663 29.1366 5.82609 27.8261L20.1739 42.1739C21.4845 43.4845 24.5355 42.7467 28.1133 40.548C30.3042 39.2016 32.6927 37.3073 35 35C37.3073 32.6927 39.2016 30.3042 40.548 28.1133C42.7467 24.5355 43.4845 21.4845 42.1739 20.1739Z" fill="currentColor"></path>
 </svg>
 </div>
-<h2 class="text-lg font-bold leading-tight tracking-[-0.015em]">TechFlow</h2>
+<h2 class="text-xl font-bold tracking-tight">ProdAI</h2>
 </div>
-<button class="flex min-w-[84px] cursor-pointer items-center justify-center rounded-lg h-10 px-4 bg-black text-white text-sm font-bold leading-normal hover:bg-zinc-800 transition-colors">
-<span class="truncate">Help</span>
-</button>
+<nav class="hidden md:flex items-center gap-8">
+<a class="text-sm font-medium text-muted-text hover:text-black transition-colors" href="#">Overview</a>
+<a class="text-sm font-semibold border-b-2 border-black pb-1" href="#">Team Analytics</a>
+<a class="text-sm font-medium text-muted-text hover:text-black transition-colors" href="#">Reports</a>
+<a class="text-sm font-medium text-muted-text hover:text-black transition-colors flex items-center gap-2" href="#">
+                        Inbox
+                        <span class="inline-flex items-center justify-center w-5 h-5 text-[10px] font-bold text-white bg-black rounded-full">12</span>
+</a>
+</nav>
+</div>
+<div class="flex items-center gap-6">
+<div class="flex items-center gap-3 pl-6 border-l border-border-soft group cursor-pointer">
+<div class="text-right">
+<p class="text-sm font-bold leading-none">Marcus Thorne</p>
+<p class="text-xs text-muted-text">Engineering Manager</p>
+</div>
+<div class="w-10 h-10 rounded-full bg-neutral-200 overflow-hidden">
+<img alt="Manager Profile" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBRpmBIkwt88X0uBdaflvet861nK8QsKgTZjeHkn5qDzX83eNFUtfZkq-KX5eCHI39lKT8e9Q2JTixrJzLuokpeAZqTya9VnmDj7Z8GyDdiL5yJGY2K31givhAYg0hpFFPsyX71R5mOlE2yPOtPRlJb-nUPsu_GnfFAXEiTGwunfX1PdZb34hB_wML3rwgfr1XrlnYEhOr0Vn2PbquzIKYg8ZaUZaix5ow7hVkwb8WFtpLuA7DNX5xjtzNxn1BQp95ZEfHqVC0mSPc"/>
+</div>
+</div>
+</div>
+</div>
 </header>
-<main class="flex-1 flex flex-col md:flex-row overflow-hidden">
-<div class="hidden md:flex md:w-1/2 relative flex-col justify-center items-center p-12 overflow-hidden bg-black">
-<div class="absolute inset-0 bg-gradient-to-br from-black via-charcoal to-black opacity-100"></div>
-<div class="relative z-10 max-w-lg text-white">
+<main class="flex-1 mx-auto w-full max-w-[1400px] px-6 lg:px-10 py-8">
 <div class="mb-8">
-<span class="material-symbols-outlined text-6xl opacity-30">format_quote</span>
+<button class="flex items-center gap-2 px-4 py-2 border border-black rounded text-sm font-bold hover:bg-black hover:text-white transition-all">
+<span class="material-symbols-outlined text-sm">arrow_back</span>
+                Back to Manager
+            </button>
 </div>
-<h1 class="text-4xl font-black leading-tight tracking-[-0.033em] mb-6">
-                Workforce management simplified.
-            </h1>
-<div class="flex flex-col gap-4">
-<p class="text-xl font-medium italic leading-relaxed opacity-80">
-                    "This system has completely transformed how we manage our internal workflows. It is intuitive, fast, and reliable."
-                </p>
-<div class="flex items-center gap-4 mt-4">
-<div class="h-12 w-12 rounded-full bg-cover bg-center border-2 border-white/20" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCUqFyk9H5fC3wP_qO9DMxDESoaoRjODtoWC19KWzyg5cMZEyFNEgZud1BcfhwWvpeZ-_WjMeYIgk4hf1IBHHOmL_wUeav-h3cnCX3L6kSzpB4neBpj5GH1fXXi2fhBKdU1DdmOcbH-Nm23LZkNvrTio0-opCZzoCkxMCIIkSAikBvQR1k9Nkk7aZxbguy40ut578TmqsEUWUUbv6RBrcAbnqz6azG8PuESuS1pwhLsJl4SpLQO7yDiJJgpVu-57Ru1wnEQL_3tkgQ');"></div>
+<section class="mb-10">
+<div class="bg-white rounded-xl border border-border-soft p-8 flex flex-col md:flex-row items-center justify-between gap-8">
+<div class="flex items-center gap-6">
+<div class="w-20 h-20 rounded-full bg-neutral-200 overflow-hidden border-2 border-black/5">
+<img alt="Alex Rivers" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBt9uLzdKN2x4LoXRFds_UuSNzPpL_elVgHlr6QVw45EEZ92-M0o8YqTuHURRBcPhpweys-iqogkr0-7efJeFSeTyYHgKRSKV-ybfDVUcltlpWYIx0MrELIoa_mUCm-ayIC7bN7Oz90pl6mxqsLYgd2CYoj4sTmZINBmfDNjI5i57sEusAa-ZU9v5NEOCcygByZeBFdhrmDpYbsXEqIJ9Ab9EbZxaeGFrDpa7X2z-kHvnMdkB-GjrjhbvEzZc_Snn-8krqBkRvaRgg"/>
+</div>
 <div>
-<p class="font-bold">Jane Doe</p>
-<p class="text-sm opacity-60">Operations Director at TechFlow</p>
+<h1 class="text-3xl font-black tracking-tight mb-1">Alex Rivers</h1>
+<p class="text-muted-text font-medium">Senior Developer • Product Team</p>
+</div>
+</div>
+<div class="flex items-center gap-12">
+<div class="text-center">
+<p class="text-xs font-black text-muted-text uppercase tracking-widest mb-1">Total Tasks</p>
+<p class="text-4xl font-black">45</p>
+</div>
+<div class="text-center">
+<p class="text-xs font-black text-muted-text uppercase tracking-widest mb-1">Completion Rate</p>
+<p class="text-4xl font-black">88%</p>
+</div>
+<div class="text-center">
+<p class="text-xs font-black text-muted-text uppercase tracking-widest mb-1">Avg. Cycle Time</p>
+<p class="text-4xl font-black">4.2d</p>
 </div>
 </div>
 </div>
-</div>
-<div class="absolute bottom-0 right-0 w-64 h-64 bg-white opacity-[0.03] rounded-full -mr-20 -mb-20"></div>
-<div class="absolute top-0 left-0 w-40 h-40 bg-white opacity-[0.03] rounded-full -ml-10 -mt-10"></div>
-</div>
-<div class="w-full md:w-1/2 flex items-center justify-center p-6 md:p-12 bg-background-light dark:bg-background-dark">
-<div class="w-full max-w-[480px] flex flex-col auth-card">
-<div class="mb-8">
-<h2 class="text-[#0d141b] dark:text-white text-3xl font-bold leading-tight tracking-[-0.015em] mb-2">Welcome Back</h2>
-<p class="text-[#4c739a] dark:text-zinc-400 text-base font-normal">Please enter your details to sign in.</p>
-</div>
-<div class="bg-white dark:bg-zinc-900 rounded-xl shadow-xl p-8 border border-zinc-100 dark:border-zinc-800">
-<div class="flex mb-8">
-<div class="flex h-11 flex-1 items-center justify-center rounded-lg bg-[#e7edf3] dark:bg-zinc-800 p-1">
-<label class="flex cursor-pointer h-full grow items-center justify-center overflow-hidden rounded-lg px-2 has-[:checked]:bg-black has-[:checked]:text-white dark:has-[:checked]:bg-white dark:has-[:checked]:text-black has-[:checked]:shadow-[0_0_4px_rgba(0,0,0,0.1)] text-[#4c739a] text-sm font-semibold transition-all">
-<span class="truncate">Employee</span>
-<input checked="" class="invisible w-0 role-employee" name="role-selector" type="radio" value="Employee"/>
-</label>
-<label class="flex cursor-pointer h-full grow items-center justify-center overflow-hidden rounded-lg px-2 has-[:checked]:bg-black has-[:checked]:text-white dark:has-[:checked]:bg-white dark:has-[:checked]:text-black has-[:checked]:shadow-[0_0_4px_rgba(0,0,0,0.1)] text-[#4c739a] text-sm font-semibold transition-all">
-<span class="truncate">Manager</span>
-<input class="invisible w-0 role-manager" name="role-selector" type="radio" value="Manager"/>
-</label>
-</div>
-</div>
-<form action="#" class="flex flex-col gap-5" method="POST">
-<div class="flex flex-col gap-1.5">
-<label class="text-sm font-bold text-[#0d141b] dark:text-zinc-200" for="email">Email Address</label>
+</section>
+<section class="bg-white border border-border-soft rounded-xl overflow-hidden">
+<div class="px-8 py-6 border-b border-border-soft flex items-center justify-between">
+<h3 class="text-xl font-bold">All Tasks of Alex Rivers</h3>
+<div class="flex items-center gap-3">
 <div class="relative">
-<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 text-[20px]">mail</span>
-<input class="w-full h-11 pl-10 pr-4 rounded-lg border border-[#d1dbe5] dark:border-zinc-700 dark:bg-zinc-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-black/20 focus:border-black transition-all" id="email" placeholder="name@company.com" type="email"/>
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-muted-text text-sm">search</span>
+<input class="pl-10 pr-4 py-2 text-sm border border-border-soft rounded-lg focus:outline-none focus:ring-1 focus:ring-black w-64" placeholder="Search task history..." type="text"/>
+</div>
+<button class="flex items-center gap-2 border border-border-soft px-4 py-2 rounded-lg text-sm font-bold hover:bg-neutral-50 transition-colors">
+<span class="material-symbols-outlined text-sm">filter_list</span>
+                        Filter
+                    </button>
 </div>
 </div>
-<div class="flex flex-col gap-1.5">
-<div class="flex justify-between items-center">
-<label class="text-sm font-bold text-[#0d141b] dark:text-zinc-200" for="password">Password</label>
-<a class="text-xs font-semibold text-black hover:underline dark:text-white" href="#">Forgot password?</a>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-neutral-50/50">
+<th class="px-8 py-4 text-xs font-black text-muted-text uppercase tracking-widest">Task Name</th>
+<th class="px-8 py-4 text-xs font-black text-muted-text uppercase tracking-widest">Assigned Date</th>
+<th class="px-8 py-4 text-xs font-black text-muted-text uppercase tracking-widest">Deadline</th>
+<th class="px-8 py-4 text-xs font-black text-muted-text uppercase tracking-widest">Submitted Date</th>
+<th class="px-8 py-4 text-xs font-black text-muted-text uppercase tracking-widest">Status</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-border-soft">
+<tr class="hover:bg-neutral-50/30 transition-colors">
+<td class="px-8 py-6">
+<span class="font-bold text-sm block">Integrate Stripe API</span>
+<span class="text-xs text-muted-text">Project: E-commerce Refactor</span>
+</td>
+<td class="px-8 py-6 text-sm text-muted-text">Oct 12, 2023</td>
+<td class="px-8 py-6 text-sm text-muted-text">Oct 20, 2023</td>
+<td class="px-8 py-6 text-sm text-muted-text">Oct 19, 2023</td>
+<td class="px-8 py-6">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-black text-white">Completed</span>
+</td>
+</tr>
+<tr class="hover:bg-neutral-50/30 transition-colors">
+<td class="px-8 py-6">
+<span class="font-bold text-sm block">Design System Update</span>
+<span class="text-xs text-muted-text">Project: Global Branding</span>
+</td>
+<td class="px-8 py-6 text-sm text-muted-text">Oct 10, 2023</td>
+<td class="px-8 py-6 text-sm text-muted-text">Oct 15, 2023</td>
+<td class="px-8 py-6 text-sm text-muted-text">—</td>
+<td class="px-8 py-6">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-neutral-200 text-black">In Progress</span>
+</td>
+</tr>
+<tr class="hover:bg-neutral-50/30 transition-colors">
+<td class="px-8 py-6">
+<span class="font-bold text-sm block">Legacy Code Cleanup</span>
+<span class="text-xs text-muted-text">Project: Infrastructure</span>
+</td>
+<td class="px-8 py-6 text-sm text-muted-text">Oct 01, 2023</td>
+<td class="px-8 py-6 text-sm text-muted-text">Oct 05, 2023</td>
+<td class="px-8 py-6 text-sm text-red-600 font-medium">Oct 08, 2023</td>
+<td class="px-8 py-6">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-red-100 text-red-700">Overdue</span>
+</td>
+</tr>
+<tr class="hover:bg-neutral-50/30 transition-colors">
+<td class="px-8 py-6">
+<span class="font-bold text-sm block">AI Model Optimization</span>
+<span class="text-xs text-muted-text">Project: Core Intelligence</span>
+</td>
+<td class="px-8 py-6 text-sm text-muted-text">Sep 25, 2023</td>
+<td class="px-8 py-6 text-sm text-muted-text">Oct 05, 2023</td>
+<td class="px-8 py-6 text-sm text-muted-text">Oct 02, 2023</td>
+<td class="px-8 py-6">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-black text-white">Completed</span>
+</td>
+</tr>
+<tr class="hover:bg-neutral-50/30 transition-colors">
+<td class="px-8 py-6">
+<span class="font-bold text-sm block">User Auth Middleware</span>
+<span class="text-xs text-muted-text">Project: Security Protocol</span>
+</td>
+<td class="px-8 py-6 text-sm text-muted-text">Sep 15, 2023</td>
+<td class="px-8 py-6 text-sm text-muted-text">Sep 20, 2023</td>
+<td class="px-8 py-6 text-sm text-muted-text">Sep 19, 2023</td>
+<td class="px-8 py-6">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-black text-white">Completed</span>
+</td>
+</tr>
+</tbody>
+</table>
 </div>
-<div class="relative">
-<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 text-[20px]">lock</span>
-<input class="w-full h-11 pl-10 pr-4 rounded-lg border border-[#d1dbe5] dark:border-zinc-700 dark:bg-zinc-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-black/20 focus:border-black transition-all" id="password" placeholder="••••••••" type="password"/>
-</div>
-</div>
-<div class="flex items-center gap-2 py-1">
-<input class="w-4 h-4 rounded border-[#d1dbe5] text-black focus:ring-black" id="remember" type="checkbox"/>
-<label class="text-sm text-[#4c739a] dark:text-zinc-400" for="remember">Keep me signed in</label>
-</div>
-<button class="btn-primary w-full h-12 bg-black text-white rounded-lg font-bold text-base shadow-lg shadow-black/10 hover:bg-zinc-800 active:scale-[0.98] transition-all flex items-center justify-center gap-2" type="submit">
-<span>Sign In</span>
-<span class="material-symbols-outlined text-[20px]">login</span>
+<div class="px-8 py-4 bg-neutral-50 border-t border-border-soft flex items-center justify-between">
+<p class="text-xs text-muted-text">Showing 5 of 45 historical tasks</p>
+<div class="flex gap-2">
+<button class="p-1 border border-border-soft rounded hover:bg-white transition-colors">
+<span class="material-symbols-outlined text-sm">chevron_left</span>
 </button>
-</form>
-<div class="relative my-8 text-center">
-<div aria-hidden="true" class="absolute inset-0 flex items-center">
-<div class="w-full border-t border-zinc-200 dark:border-zinc-800"></div>
-</div>
-<span class="relative bg-white dark:bg-zinc-900 px-4 text-xs font-bold text-zinc-400 uppercase tracking-widest">Or continue with</span>
-</div>
-<div class="grid grid-cols-2 gap-4">
-<button class="flex items-center justify-center gap-2 h-11 border border-[#d1dbe5] dark:border-zinc-700 rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors">
-<img class="w-5 h-5" data-alt="Google G logo" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD7Rpz5QnujiYrz7_yjC1D0Ktmyz1QxevmU-myeUoMuZjGNIN5CFJejJPzf5Zdd3fi7ObO4aobKFu3aIaHEvjfno4GpAKX9v1hk5yL_-0Ss6Sy-X3Vba4SiBitWNHztb7fqP-QhmutvM17LM3PnIkV1DVrehW-9Ft0JTOJ9JiOoBH8j0n5SiCe9hSnre0mURZFmM3jf0pOF6vd9cagZZg3up4cJ82XqbhYi3uaxJyf1bwYmmpmN9zJUS0eZbZqgN6RwSwHRn6i7k7g"/>
-<span class="text-sm font-semibold text-zinc-700 dark:text-zinc-200">Google</span>
-</button>
-<button class="flex items-center justify-center gap-2 h-11 border border-[#d1dbe5] dark:border-zinc-700 rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors">
-<img class="w-5 h-5" data-alt="Microsoft logo" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAXPbryWaBQhfkWi9ar3z4ZgniqDqmZPsLS2B7rrS4ZiWBDb8T2WSiHZlF42Qpe6ggOnHN7Jh3BbIXWsGjqmp5Wg1jDD-c-bY3xkzTrH9_pSvqyv-wgUaps52BS3y5kZ7FoGNYACw0mksQBrSEklOzB1hPk4atxiukvumFKJZSgGDtCUKZD5MDdnbhfjvOsE12aqKGeq4XEAQuOFruQHiBqzsQV6AmkrP1DqTrPH8R-yLfYonnnS-U-w-jDuARJBTK7J-zxmwYOmTE"/>
-<span class="text-sm font-semibold text-zinc-700 dark:text-zinc-200">Microsoft</span>
+<button class="p-1 border border-border-soft rounded bg-white font-bold text-xs px-2">1</button>
+<button class="p-1 border border-border-soft rounded hover:bg-white transition-colors text-xs px-2">2</button>
+<button class="p-1 border border-border-soft rounded hover:bg-white transition-colors text-xs px-2">3</button>
+<button class="p-1 border border-border-soft rounded hover:bg-white transition-colors">
+<span class="material-symbols-outlined text-sm">chevron_right</span>
 </button>
 </div>
 </div>
-<p class="text-center mt-8 text-sm text-[#4c739a] dark:text-zinc-400 font-medium">
-                Don't have an account? 
-                <a class="text-black dark:text-white font-bold hover:underline" href="#">Create an account</a>
-</p>
-</div>
-</div>
+</section>
 </main>
-<footer class="w-full px-10 py-6 text-center text-xs text-[#4c739a] dark:text-zinc-500 border-t border-zinc-200 dark:border-zinc-800 bg-white dark:bg-background-dark">
-        © 2023 TechFlow Inc. All rights reserved. | <a class="hover:text-black dark:hover:text-white mx-2" href="#">Privacy Policy</a> | <a class="hover:text-black dark:hover:text-white mx-2" href="#">Terms of Service</a>
+<footer class="border-t border-border-soft bg-white py-12 mt-auto">
+<div class="mx-auto max-w-[1400px] px-6 lg:px-10 flex flex-col md:flex-row items-center justify-between gap-8">
+<div class="flex items-center gap-3">
+<div class="text-black">
+<svg class="w-6 h-6" fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+<path d="M42.1739 20.1739L27.8261 5.82609C29.1366 7.13663 28.3989 10.1876 26.2002 13.7654C24.8538 15.9564 22.9595 18.3449 20.6522 20.6522C18.3449 22.9595 15.9564 24.8538 13.7654 26.2002C10.1876 28.3989 7.13663 29.1366 5.82609 27.8261L20.1739 42.1739C21.4845 43.4845 24.5355 42.7467 28.1133 40.548C30.3042 39.2016 32.6927 37.3073 35 35C37.3073 32.6927 39.2016 30.3042 40.548 28.1133C42.7467 24.5355 43.4845 21.4845 42.1739 20.1739Z" fill="currentColor"></path>
+</svg>
+</div>
+<span class="text-lg font-bold">ProdAI</span>
+</div>
+<div class="flex items-center gap-8 text-sm font-medium text-muted-text">
+<a class="hover:text-black" href="#">Documentation</a>
+<a class="hover:text-black" href="#">Support</a>
+<a class="hover:text-black" href="#">Settings</a>
+<a class="text-black flex items-center gap-1" href="#">
+<span class="material-symbols-outlined text-sm">logout</span> Logout
+                </a>
+</div>
+<p class="text-xs text-muted-text">© 2023 ProdAI Inc. All rights reserved.</p>
+</div>
 </footer>
+</div>
 
 </body></html>

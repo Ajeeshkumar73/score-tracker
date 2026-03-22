@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>Score Tracker | Employee Tasks</title>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&amp;display=swap" rel="stylesheet" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+    rel="stylesheet" />
+  <script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "primary": "#000000",
+            "background-light": "#fcfcfc",
+            "border-soft": "#e5e7eb",
+            "muted-text": "#6b7280"
+          },
+          fontFamily: {
+            "sans": ["Inter", "sans-serif"]
+          },
+          borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+        },
+      },
+    }
+  </script>
+  <style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+
+    .circular-progress {
+      background: radial-gradient(closest-side, white 79%, transparent 80% 100%),
+        conic-gradient(black 85%, #f3f4f6 0);
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+  </style>
+</head>
+
+<body class="bg-background-light font-sans text-black">
+  <div class="relative flex min-h-screen w-full flex-col overflow-x-hidden">
+    <!--header-->
+    <header class="sticky top-0 z-50 w-full border-b border-border-soft bg-white/80 backdrop-blur-md">
+      <div class="mx-auto max-w-[1400px] px-6 lg:px-10 py-4 flex items-center justify-between">
+        <div class="flex items-center gap-8">
+          <div class="flex items-center gap-3">
+            <div class="text-primary">
+            </div>
+            <h2 class="text-xl font-bold tracking-tight">Score Tracker</h2>
+          </div>
+        </div>
+        <div class="flex items-center gap-6">
+          <div class="flex items-center gap-3 pl-6 border-l border-border-soft group cursor-pointer">
+
+            <a class="text-sm font-medium text-muted-text hover:text-black transition-colors flex items-center gap-2"
+              href="/manager">
+              Back to Dashboard<span class="material-symbols-outlined text-sm">arrow_back</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </header>
+    <main class="flex-1 mx-auto w-full max-w-[1400px] px-6 lg:px-10 py-8">
+      <section class="mb-10">
+        <div
+          class="bg-white rounded-xl border border-border-soft p-8 flex flex-col md:flex-row items-center justify-between gap-8">
+          <div class="flex items-center gap-6">
+            <div>
+              <h1 class="text-3xl font-black tracking-tight mb-1">{{ employee.name }}</h1>
+              <p class="text-muted-text font-medium">{{ employee.position }}</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-12">
+            <div class="text-center">
+              <p class="text-xs font-black text-muted-text uppercase tracking-widest mb-1">Total Tasks</p>
+              <p class="text-4xl font-black">{{ total_tasks }}</p>
+            </div>
+            <div class="text-center">
+              <p class="text-xs font-black text-muted-text uppercase tracking-widest mb-1">Pending Tasks</p>
+              <p class="text-4xl font-black">{{ pending_tasks }}</p>
+            </div>
+            <div class="text-center">
+              <p class="text-xs font-black text-muted-text uppercase tracking-widest mb-1">Completion Rate</p>
+              <p class="text-4xl font-black">{{ score }}%</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="task" class="bg-white border border-border-soft rounded-xl overflow-hidden">
+        <div class="px-8 py-6 border-b border-border-soft flex items-center justify-between">
+          <h3 class="text-xl font-bold">All Tasks of {{ employee.name }}</h3>
+          <div class="flex items-center gap-3">
+            <div class="relative">
+              <span
+                class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-muted-text text-sm">search</span>
+              <input id="task-search"
+                class="pl-10 pr-4 py-2 text-sm border border-border-soft rounded-lg focus:outline-none focus:ring-1 focus:ring-black w-64"
+                placeholder="Search tasks..." type="text" />
+            </div>
+          </div>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-neutral-50/50">
+                <th class="px-8 py-4 text-xs font-black text-muted-text uppercase tracking-widest">Task Name</th>
+                <th class="px-8 py-4 text-xs font-black text-muted-text uppercase tracking-widest">Assigned</th>
+                <th class="px-8 py-4 text-xs font-black text-muted-text uppercase tracking-widest">Deadline</th>
+                <th class="px-8 py-4 text-xs font-black text-muted-text uppercase tracking-widest">Submited</th>
+                <th class="px-8 py-4 text-xs font-black text-muted-text uppercase tracking-widest">Status</th>
+              </tr>
+            </thead>
+            <tbody id="tasks-body" class="divide-y divide-border-soft">
+              {% for t in tasks %}
+              <tr class="hover:bg-neutral-50/30 transition-colors" data-task-name="{{ t.task_name | lower }}">
+                <td class="px-8 py-6">
+                  <span class="font-bold text-sm block">{{ t.task_name }}</span>
+                </td>
+                <td class="px-8 py-6 text-sm text-muted-text" id="date" data-date="{{ t.assigned_date }}">-</td>
+                <td class="px-8 py-6 text-sm text-muted-text" id="date" data-date="{{ t.deadline }}">-</td>
+                <td class="px-8 py-6 text-sm text-muted-text" id="date" data-date="{{ t.submit_date }}">-</td>
+                <td class="px-8 py-6">
+                  <span class="">{% if t.status == "completed" %}
+                    <span
+                      class="inline-flex items-center rounded-full bg-green-50 px-2.5 py-1 text-xs font-bold text-green-700">
+                      Completed
+                    </span>
+                    {% elif t.status == "in_progress" %}
+                    <span
+                      class="inline-flex items-center rounded-full bg-yellow-50 px-2.5 py-1 text-xs font-bold text-yellow-700">
+                      In Progress
+                    </span>
+                    {% elif t.status == "delayed" %}
+                    <span
+                      class="inline-flex items-center rounded-full bg-red-50 px-2.5 py-1 text-xs font-bold text-red-700">
+                      Delayed
+                    </span>
+                    {% else %}
+                    <span
+                      class="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-1 text-xs font-bold text-gray-700">
+                      Assigned
+                    </span>
+                    {% endif %}</span>
+                </td>
+              </tr>
+              {% endfor %}
+
+            </tbody>
+          </table>
+        </div>
+        <div class="px-8 py-4 bg-neutral-50 border-t border-border-soft flex items-center justify-between">
+          <p id="pagination-info" class="text-xs text-muted-text">Showing 1-4 of {{ tasks|length }} tasks</p>
+          <div class="flex gap-2">
+            <button id="prev-btn" class="p-1 border border-border-soft rounded hover:bg-white transition-colors">
+              <span class="material-symbols-outlined text-sm">chevron_left</span>
+            </button>
+            <button id="next-btn" class="p-1 border border-border-soft rounded hover:bg-white transition-colors">
+              <span class="material-symbols-outlined text-sm">chevron_right</span>
+            </button>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      document.querySelectorAll("#date").forEach(td => {
+        let raw = td.getAttribute("data-date");
+        if (!raw || raw === "None") {
+          td.innerText = "-";
+          return;
+        }
+
+        let d = new Date(raw);
+
+        let day = String(d.getDate()).padStart(2, '0');
+        let month = String(d.getMonth() + 1).padStart(2, '0');
+        let year = d.getFullYear();
+
+        td.innerText = `${day}-${month}-${year}`;
+      });
+    </script>
+
+    <!--search-->
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        const searchInput = document.getElementById("task-search");
+        const tableBody = document.getElementById("tasks-body"); // now it exists
+        const rows = Array.from(tableBody.querySelectorAll("tr"));
+
+        searchInput.addEventListener("input", () => {
+          const term = searchInput.value.toLowerCase();
+
+          rows.forEach(row => {
+            const taskName = row.dataset.taskName; // already set in HTML
+            if (taskName.includes(term)) {
+              row.style.display = ""; // show the row
+            } else {
+              row.style.display = "none"; // hide the row
+            }
+          });
+        });
+      });
+    </script>
+
+
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        const rows = Array.from(document.querySelectorAll("#tasks-body tr"));
+        const pageSize = 4;
+        let currentPage = 1;
+        const totalRows = rows.length;
+        const totalPages = Math.ceil(totalRows / pageSize);
+
+        const info = document.getElementById("pagination-info");
+        const prevBtn = document.getElementById("prev-btn");
+        const nextBtn = document.getElementById("next-btn");
+        const searchInput = document.getElementById("task-search");
+
+        // Function to show a specific page
+        function showPage(page) {
+          const start = (page - 1) * pageSize;
+          const end = start + pageSize;
+
+          rows.forEach((row, i) => {
+            row.style.display = (i >= start && i < end) ? "" : "none";
+          });
+
+          const startNum = totalRows === 0 ? 0 : start + 1;
+          const endNum = Math.min(end, totalRows);
+          info.innerText = `Showing ${startNum}-${endNum} of ${totalRows} tasks`;
+
+          // Enable/disable buttons
+          prevBtn.disabled = page === 1;
+          nextBtn.disabled = page === totalPages;
+        }
+
+        // Initial display
+        showPage(currentPage);
+
+        // Button events
+        prevBtn.addEventListener("click", () => {
+          if (currentPage > 1) {
+            currentPage--;
+            showPage(currentPage);
+          }
+        });
+
+        nextBtn.addEventListener("click", () => {
+          if (currentPage < totalPages) {
+            currentPage++;
+            showPage(currentPage);
+          }
+        });
+
+      });
+    </script>
+
+</body>
+
+</html>

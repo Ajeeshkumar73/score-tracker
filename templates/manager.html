@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html>
+<title>Score Tracker | Manager Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&amp;display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+  rel="stylesheet" />
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        colors: {
+          "primary": "#000000",
+          "background-light": "#fcfcfc",
+          "border-soft": "#e5e7eb",
+          "text-muted": "#6b7280"
+        },
+        fontFamily: {
+          "display": ["Inter", "sans-serif"]
+        },
+        borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+      },
+    },
+  }
+</script>
+<style>
+  .material-symbols-outlined {
+    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  }
+
+  body {
+    background-color: #fcfcfc;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+</style>
+</head>
+
+<body class="font-display text-black">
+  <div class="min-h-screen flex flex-col">
+    <header class="sticky top-0 z-50 w-full border-b border-border-soft bg-white/80 backdrop-blur-md">
+      <div class="mx-auto max-w-[1400px] px-6 py-4 flex items-center justify-between">
+        <div class="flex items-center gap-8">
+          <div class="flex items-center gap-2">
+            <div class="text-black">
+            </div>
+            <h2 class="text-xl font-bold tracking-tight">Score Tracker</h2>
+          </div>
+          <nav class="hidden md:flex items-center gap-8">
+            <a class="text-sm font-semibold text-black underline underline-offset-4" href="#">Dashboard</a>
+            <a class="text-sm font-semibold text-text-muted hover:text-black transition-colors" href="#team">Team</a>
+            <a class="text-sm font-semibold text-text-muted hover:text-black transition-colors"
+              href="#Recommendation">Recommendations</a>
+          </nav>
+        </div>
+        <div class="flex items-center gap-6">
+          <div class="relative">
+            <button id="notif-btn" class="relative">
+              <span class="material-symbols-outlined text-2xl">notifications</span>
+              <span id="notif-count" class="absolute -top-1 -right-1 bg-red-600 text-white text-[10px]
+                 font-bold px-1.5 py-0.5 rounded-full {% if unread == 0 %}hidden{% endif %}">{{ unread }}</span>
+            </button>
+            <!-- Dropdown -->
+            <div id="notif-dropdown" class="hidden absolute right-0 mt-3 w-80 bg-white border border-border-soft rounded-xl shadow-2xl z-[100] overflow-hidden">
+               <div class="px-4 py-3 border-b border-border-soft flex items-center justify-between">
+                 <h4 class="font-bold text-sm">Notifications</h4>
+               </div>
+               <div id="notif-list" class="max-h-[400px] overflow-y-auto divide-y divide-border-soft">
+                 <!-- Notifications will load here -->
+               </div>
+               <div class="p-3 text-center border-t border-border-soft bg-gray-50">
+                   <p class="text-[10px] text-text-muted">Stay updated with real-time alerts</p>
+               </div>
+            </div>
+          </div>
+          <div class="h-8 w-[1px] bg-border-soft"></div>
+          <div class="flex items-center gap-3">
+            <div class="text-right">
+              <p class="text-sm font-bold leading-none">{{ user.name }}</p>
+              <p class="text-xs text-text-muted mt-1">{{ user.position }}</p>
+            </div>
+          </div>
+          <div>
+            <a class="text-sm font-medium text-muted-text hover:text-black transition-colors flex items-center gap-2"
+              href="/logout">
+              <span class="material-symbols-outlined text-sm">logout</span> Logout
+            </a>
+          </div>
+        </div>
+      </div>
+    </header>
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="fixed top-20 left-1/2 -translate-x-1/2 z-[60] w-full max-w-md px-4 space-y-3">
+      {% for category, message in messages %}
+      <div class="flash-toast bg-[#f0fdf4] border border-emerald-200 rounded-full py-2.5 pl-4 pr-3 shadow-lg shadow-emerald-900/5 flex items-center justify-between backdrop-blur-sm
+          {% if category == 'error' %}
+            bg-red-50 border-red-200
+          {% endif %}">
+        <div class="flex items-center gap-3">
+          <span class="material-symbols-outlined 
+              {% if category == 'error' %}
+                text-red-600
+              {% else %}
+                text-emerald-600
+              {% endif %}
+              text-[20px] leading-none">
+            {% if category == 'error' %}
+            error
+            {% else %}
+            check_circle
+            {% endif %}
+          </span>
+
+          <span class="text-[#1e293b] text-sm font-medium">
+            {{ message }}
+          </span>
+        </div>
+
+        <button onclick="this.closest('.flash-toast').remove()" class="flex items-center justify-center p-1 rounded-full hover:bg-emerald-100 text-emerald-600 transition-colors
+            {% if category == 'error' %}
+              hover:bg-red-100 text-red-600
+            {% endif %}">
+          <span class="material-symbols-outlined text-lg">close</span>
+        </button>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
+
+    <main class="flex-1 mx-auto max-w-[1400px] w-full px-6 py-10 space-y-10">
+      <section class="bg-white border border-border-soft rounded-xl p-6">
+        <h3 class="text-sm font-bold uppercase tracking-wider mb-6">Assign New Task</h3>
+        <form class="flex flex-col lg:flex-row gap-4" action="/assign" method="post"
+          onsubmit="return validateTaskForm()">
+          <script>
+            function validateTaskForm() {
+              const task = document.getElementsByName("task")[0].value.trim();
+              const category = document.getElementsByName("category")[0].value;
+              const employee = document.getElementsByName("employee")[0].value;
+              const deadline = document.getElementsByName("deadline")[0].value;
+
+              if (!task) {
+                alert("Please enter a task description");
+                return false;
+              }
+              if (employee === "Select Employee") {
+                alert("Please select an employee");
+                return false;
+              }
+              if (!deadline) {
+                alert("Please select a deadline");
+                return false;
+              }
+
+              const selectedDate = new Date(deadline);
+              const today = new Date();
+              today.setHours(0, 0, 0, 0);
+              if (selectedDate < today) {
+                alert("Deadline cannot be in the past");
+                return false;
+              }
+
+              return true;
+            }
+          </script>
+          <div class="flex-1">
+            <input name="task"
+              class="w-full bg-white text-black border border-border-hard rounded-lg px-4 py-3 text-sm focus:ring-1 focus:ring-gray-400 placeholder-gray-500"
+              placeholder="Task description..." type="text" />
+          </div>
+          <div class="w-full lg:w-48">
+            <select name="category"
+              class="w-full bg-white text-black border border-border-hard rounded-lg px-4 py-3 text-sm focus:ring-1 focus:ring-gray-400">
+              <option value="coding">Coding</option>
+              <option value="testing">Testing</option>
+              <option value="design">Design</option>
+              <option value="documentation">Documentation</option>
+            </select>
+          </div>
+          <div class="w-full lg:w-48">
+            <select name="employee"
+              class="w-full bg-white text-black border border-border-hard rounded-lg px-4 py-3 text-sm focus:ring-1 focus:ring-gray-400">
+              <option>Select Employee</option>
+              {% for u in users %}
+              <option value="{{ u._id }}">{{ u.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="w-full lg:w-48">
+            <input name="deadline"
+              class="w-full bg-white text-black border border-border-hard rounded-lg px-4 py-3 text-sm focus:ring-1 focus:ring-gray-400"
+              placeholder="Deadline:" type="date" />
+          </div>
+          <button type="submit"
+            class="bg-black text-white px-8 py-3 rounded-lg text-sm font-bold hover:bg-neutral-800 transition-all">
+            Assign Task
+          </button>
+        </form>
+      </section>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+
+        <!-- Productivity Ranking -->
+        <div class="bg-white border border-border-soft rounded-xl p-6 shadow-sm">
+          <div class="flex items-center justify-between mb-6">
+            <h3 class="text-sm font-bold uppercase tracking-wider">Productivity Ranking</h3>
+            <span class="text-[10px] font-bold text-text-muted">LAST 7 DAYS</span>
+          </div>
+          <div class="space-y-5">
+            {% for r in ranking %}
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <span class="text-sm font-bold text-text-muted w-4">{{ loop.index }}</span>
+                <span class="text-sm font-medium">{{ r.name }}</span>
+              </div>
+              <span class="text-sm font-bold">{{ r.score }} %</span>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+
+        <!-- Available Staff -->
+        <div class="bg-white border border-border-soft rounded-xl p-6 shadow-sm">
+          <h3 class="text-sm font-bold uppercase tracking-wider mb-6">Available Staff</h3>
+
+          {% if free_employees %}
+          <div class="space-y-4">
+            {% for u in free_employees %}
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <div class="h-2 w-2 rounded-full bg-green-500"></div>
+                <span class="text-sm font-medium">{{ u.name }}</span>
+              </div>
+              <span class="text-[10px] font-bold text-gray-400 uppercase">Free</span>
+            </div>
+            {% endfor %}
+          </div>
+          {% else %}
+          <p class="text-sm text-red-600 font-bold">No employees are free right now</p>
+          {% endif %}
+        </div>
+      </div>
+
+      <div id="Recommendation" class="space-y-4">
+        <div class="flex items-center gap-2">
+          <span class="material-symbols-outlined text-black">auto_awesome</span>
+          <h3 class="text-lg font-bold">Smart Recommendations</h3>
+        </div>
+
+        <div class="bg-black text-white rounded-xl p-6">
+          <p class="text-sm text-gray-400 mb-6">
+            Analysis of current workload and historical performance.
+          </p>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="border-b border-white/20">
+                  <th class="py-3 text-xs font-bold text-gray-400 uppercase">Employee</th>
+                  <th class="py-3 text-xs font-bold text-gray-400 uppercase">Best At</th>
+                  <th class="py-3 text-xs font-bold text-gray-400 uppercase">Avg Time</th>
+                  <th class="py-3 text-xs font-bold text-gray-400 uppercase text-right">Action</th>
+                </tr>
+              </thead>
+
+              <tbody class="divide-y divide-white/10">
+                {% for s in skills %}
+                <tr class="hover:bg-white/5 transition-colors">
+                  <td class="py-4 text-sm font-medium">{{ s.name }}</td>
+                  <td class="py-4 text-sm">{{ s.best_category }}</td>
+                  <td class="py-4 text-sm text-gray-400">{{ s.avg_time }} mins</td>
+                  <td class="py-4 text-right">
+                    <form action="/auto_assign/{{ s.id }}" method="post" class="flex justify-end gap-2"
+                      onsubmit="return validateAutoAssign(this)">
+                      <script>
+                        function validateAutoAssign(form) {
+                          const task = form.task.value.trim();
+                          const deadline = form.deadline.value;
+                          if (!task) {
+                            alert("Please enter a task");
+                            return false;
+                          }
+                          if (!deadline) {
+                            alert("Please select a deadline");
+                            return false;
+                          }
+                          const selectedDate = new Date(deadline);
+                          const today = new Date();
+                          today.setHours(0, 0, 0, 0);
+                          if (selectedDate < today) {
+                            alert("Deadline cannot be in the past");
+                            return false;
+                          }
+                          return true;
+                        }
+                      </script>
+                      <input type="hidden" name="category" value="{{ s.best_category }}">
+                      <input name="task" placeholder="Task" class="text-xs px-2 py-1 rounded text-black w-24" required>
+                      <input type="date" name="deadline" class="text-xs px-2 py-1 rounded text-black" required>
+                      <button type="submit"
+                        class="text-xs font-bold bg-white text-black px-3 py-1.5 rounded hover:bg-gray-200">
+                        Assign
+                      </button>
+                    </form>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+
+      <div id="Verification" class="space-y-4 pt-10">
+        <div class="flex items-center gap-2">
+          <span class="material-symbols-outlined text-black">fact_check</span>
+          <h3 class="text-lg font-bold">Tasks Pending Verification</h3>
+        </div>
+
+        <div class="bg-white border border-border-soft rounded-xl overflow-hidden shadow-sm">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-gray-50 border-b border-border-soft">
+                <th class="px-6 py-4 text-xs font-bold text-muted-text uppercase tracking-wider">Employee</th>
+                <th class="px-6 py-4 text-xs font-bold text-muted-text uppercase tracking-wider">Task</th>
+                <th class="px-6 py-4 text-xs font-bold text-muted-text uppercase tracking-wider">Submitted Date</th>
+                <th class="px-6 py-4 text-xs font-bold text-muted-text uppercase tracking-wider text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-border-soft">
+              {% if pending_verification %}
+                {% for t in pending_verification %}
+                <tr id="task-{{ t._id }}" class="hover:bg-gray-50 transition">
+                  <td class="px-6 py-4 text-sm font-medium">{{ t.employee_name }}</td>
+                  <td class="px-6 py-4 text-sm">{{ t.task_name }}</td>
+                  <td class="px-6 py-4 text-sm text-muted-text date-time" data-date="{{ t.submit_date }}">-</td>
+                  <td class="px-6 py-4 text-right">
+                    <div class="flex justify-end items-center gap-3">
+                      <form action="/verify_task/{{ t._id }}" method="post" class="inline">
+                        <input type="hidden" name="action" value="accept">
+                        <button type="submit" class="bg-green-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-green-700 transition">
+                          Accept
+                        </button>
+                      </form>
+                      <button onclick="showRejectModal('{{ t._id }}')" class="bg-red-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-red-700 transition">
+                        Reject
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+                {% endfor %}
+              {% else %}
+                <tr>
+                  <td colspan="4" class="px-6 py-8 text-center text-sm text-text-muted">No tasks pending verification.</td>
+                </tr>
+              {% endif %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Reject Modal -->
+      <div id="reject-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+        <div class="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden">
+          <div class="px-6 py-4 border-b border-border-soft flex items-center justify-between">
+            <h3 class="font-bold">Reject Task</h3>
+            <button onclick="hideRejectModal()" class="text-text-muted hover:text-black">
+              <span class="material-symbols-outlined">close</span>
+            </button>
+          </div>
+          <form id="reject-form" method="post" class="p-6 space-y-4">
+            <input type="hidden" name="action" value="reject">
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider text-text-muted mb-2">Correction Message</label>
+              <textarea name="correction_msg" required class="w-full border border-border-soft rounded-lg px-4 py-3 text-sm focus:ring-1 focus:ring-black min-h-[100px]" placeholder="What needs to be corrected?"></textarea>
+            </div>
+            <div class="flex justify-end gap-3">
+              <button type="button" onclick="hideRejectModal()" class="px-4 py-2 text-sm font-bold text-text-muted hover:text-black transition">Cancel</button>
+              <button type="submit" class="bg-black text-white px-6 py-2 rounded-lg text-sm font-bold hover:bg-neutral-800 transition">Confirm Reject</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <script>
+        function showRejectModal(taskId) {
+          const modal = document.getElementById('reject-modal');
+          const form = document.getElementById('reject-form');
+          form.action = `/verify_task/${taskId}`;
+          modal.classList.remove('hidden');
+        }
+        function hideRejectModal() {
+          const modal = document.getElementById('reject-modal');
+          modal.classList.add('hidden');
+        }
+      </script>
+        <h3 class="text-lg font-bold">Team Oversight</h3>
+      </div>
+      <div class="bg-white border border-border-soft rounded-xl overflow-hidden shadow-sm">
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr class="bg-gray-50 border-b border-border-soft">
+              <th class="px-6 py-4 text-xs font-bold text-muted-text uppercase tracking-wider">Employee</th>
+              <th class="px-6 py-4 text-xs font-bold text-muted-text uppercase tracking-wider">Latest Task</th>
+              <th class="px-6 py-4 text-xs font-bold text-muted-text uppercase tracking-wider">Assigned</th>
+              <th class="px-6 py-4 text-xs font-bold text-muted-text uppercase tracking-wider">Deadline</th>
+              <th class="px-6 py-4 text-xs font-bold text-muted-text uppercase tracking-wider">Status</th>
+              <th class="px-6 py-4 text-xs font-bold text-muted-text uppercase tracking-wider">Total Task</th>
+              <th class="px-6 py-4 text-xs font-bold text-muted-text uppercase tracking-wider text-right">Actions</th>
+            </tr>
+          </thead>
+
+          <tbody class="divide-y divide-border-soft">
+            {% for t in tasks %}
+            <tr id="task-{{ t._id }}" class="hover:bg-gray-50 transition">
+
+              <!-- Employee -->
+              <td class="px-6 py-4">
+                <div class="flex items-center gap-3">
+                  <span class="text-sm font-medium">{{ t.employee_name }}</span>
+                </div>
+              </td>
+
+              <!-- Latest Task -->
+              <td class="px-6 py-4 text-sm">
+                {{ t.task_name }}
+              </td>
+
+              <!-- Assigned -->
+              <td class="px-6 py-4 text-sm text-muted-text date" data-date="{{ t.assigned_date }}">-</td>
+
+              <!-- Deadline -->
+              <td class="px-6 py-4 text-sm text-muted-text date" data-date="{{ t.deadline }}">-</td>
+
+              <!-- Status -->
+              <td class="px-6 py-4">
+                {% if t.status == "completed" %}
+                <span
+                  class="inline-flex items-center rounded-full bg-green-50 px-2.5 py-1 text-xs font-bold text-green-700">
+                  Completed
+                </span>
+                {% elif t.status == "in_progress" %}
+                <span
+                  class="inline-flex items-center rounded-full bg-yellow-50 px-2.5 py-1 text-xs font-bold text-yellow-700">
+                  In Progress
+                </span>
+                {% elif t.status == "pending_verification" %}
+                <span
+                  class="inline-flex items-center rounded-full bg-blue-50 px-2.5 py-1 text-xs font-bold text-blue-700">
+                  Pending Verification
+                </span>
+                {% elif t.status == "rejected" %}
+                <span
+                  class="inline-flex items-center rounded-full bg-orange-50 px-2.5 py-1 text-xs font-bold text-orange-700">
+                  Needs Correction
+                </span>
+                {% elif t.status == "delayed" %}
+                <span
+                  class="inline-flex items-center rounded-full bg-red-50 px-2.5 py-1 text-xs font-bold text-red-700">
+                  Delayed
+                </span>
+                {% else %}
+                <span
+                  class="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-1 text-xs font-bold text-gray-700">
+                  Assigned
+                </span>
+                {% endif %}
+              </td>
+
+              <td class="px-6 py-4 whitespace-nowrap font-bold text-center">
+                {{ t.total_tasks }}
+              </td>
+              <!-- Actions -->
+              <td class="px-6 py-4 text-right space-x-3">
+                <a href="/chat/{{ t._id }}">
+                  <button class="text-xs font-bold underline underline-offset-4
+      {% if t._id|string in unread_tasks %}
+        text-black animate-pulse
+      {% else %}
+        text-muted-text hover:text-black
+      {% endif %}">
+                    Chat
+                  </button>
+                </a>
+                <a href="/employee_tasks/{{ t.employee_id }}" class="text-xs font-bold text-black hover:underline">
+                  View All
+                </a>
+              </td>
+
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </main>
+
+    <footer class="border-t border-border-soft bg-white py-12">
+      <div class="mx-auto max-w-[1400px] px-6 lg:px-10 flex flex-col md:flex-row items-center justify-between gap-8">
+        <div class="flex items-center gap-3">
+          <div class="text-black">
+          </div>
+          <span class="text-lg font-bold">Score Tracker</span>
+        </div>
+        <div class="flex items-center gap-8 text-sm font-medium text-muted-text">
+          <a class="hover:text-black" href="#">Documentation</a>
+          <a class="hover:text-black" href="#">Support</a>
+          <a class="hover:text-black" href="#">Settings</a>
+          <a class="text-black flex items-center gap-1" href="/logout">
+            <span class="material-symbols-outlined text-sm">logout</span> Logout
+          </a>
+        </div>
+        <p class="text-xs text-muted-text">© 2026 Score Tracker Inc. All rights reserved.</p>
+      </div>
+    </footer>
+
+
+
+    <script>
+      function formatDate(d) {
+        let day = String(d.getDate()).padStart(2, '0');
+        let month = String(d.getMonth() + 1).padStart(2, '0');
+        let year = d.getFullYear();
+        return `${day}-${month}-${year}`;
+      }
+
+      function formatDateTime(d) {
+        let date = formatDate(d);
+        let hours = String(d.getHours()).padStart(2, '0');
+        let minutes = String(d.getMinutes()).padStart(2, '0');
+        return `${date} ${hours}:${minutes}`;
+      }
+
+      document.querySelectorAll(".date").forEach(td => {
+        let raw = td.dataset.date;
+        if (!raw || raw === "None") {
+          td.innerText = "-";
+          return;
+        }
+        let d = new Date(raw);
+        td.innerText = formatDate(d);
+      });
+
+      document.querySelectorAll(".date-time").forEach(td => {
+        let raw = td.dataset.date;
+        if (!raw || raw === "None") {
+          td.innerText = "-";
+          return;
+        }
+        let d = new Date(raw);
+        td.innerText = formatDateTime(d);
+      });
+    </script>
+
+    <!--flash hide-->
+    <script>
+      setTimeout(() => {
+        document.querySelectorAll('.flash-toast').forEach(toast => {
+          toast.classList.add('opacity-0', 'transition-opacity', 'duration-300');
+          setTimeout(() => toast.remove(), 300);
+        });
+      }, 3000);
+    </script>
+
+    <!--notifications-->
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <script>
+      const socket = io();
+
+      // join personal room
+      socket.emit("join_user", {
+        user_id: "{{ session['user_id'] }}"
+      });
+
+      // receive notification
+      socket.on("new_notification", data => {
+        const bell = document.getElementById("notif-count");
+        bell.classList.remove("hidden");
+        bell.innerText = parseInt(bell.innerText || 0) + 1;
+
+        bell.classList.add("animate-bounce");
+        setTimeout(() => bell.classList.remove("animate-bounce"), 800);
+        
+        // Refresh dropdown if it's open
+        if (!document.getElementById("notif-dropdown").classList.contains("hidden")) {
+           loadNotifications();
+        }
+      });
+
+      // Notification Toggle
+      const notifBtn = document.getElementById("notif-btn");
+      const notifDropdown = document.getElementById("notif-dropdown");
+      const notifList = document.getElementById("notif-list");
+
+      notifBtn.addEventListener("click", (e) => {
+         e.stopPropagation();
+         notifDropdown.classList.toggle("hidden");
+         if (!notifDropdown.classList.contains("hidden")) {
+            loadNotifications();
+         }
+      });
+
+      document.addEventListener("click", () => notifDropdown.classList.add("hidden"));
+
+      function loadNotifications() {
+         fetch("/get_notifications")
+            .then(r => r.json())
+            .then(data => {
+               notifList.innerHTML = "";
+               if (data.notifications.length === 0) {
+                  notifList.innerHTML = '<div class="p-8 text-center text-xs text-text-muted">No new alerts.</div>';
+                  return;
+               }
+               data.notifications.forEach(n => {
+                  const item = document.createElement("div");
+                  item.className = "p-4 hover:bg-gray-50 cursor-pointer transition-colors";
+                  
+                  let link = "/manager";
+                  if (n.type === "chat") link = `/chat/${n.task_id}`;
+                  else if (n.type === "submission") link = `#task-${n.task_id}`;
+                  
+                  item.innerHTML = `
+                     <div class="flex flex-col gap-1">
+                        <p class="text-xs font-medium text-black">${n.message}</p>
+                        <span class="text-[10px] text-text-muted">${n.time || ''}</span>
+                     </div>
+                  `;
+                  item.onclick = () => {
+                     fetch(`/mark_seen/${n._id}`, {method: 'POST'})
+                        .then(() => {
+                           window.location.href = link;
+                        });
+                  };
+                  notifList.appendChild(item);
+               });
+            });
+      }
+    </script>
+
+
+</body>
+
+</html>

@@ -2,3 +2,9 @@ flask
 pymongo
 werkzeug
 bson
+pandas 
+scikit-learn 
+joblib
+flask-mail
+flask-socketio 
+eventlet

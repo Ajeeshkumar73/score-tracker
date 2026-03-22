@@ -3,7 +3,7 @@
 <html class="light" lang="en"><head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>ProdAI | Maximize Team Potential</title>
+<title>Score Tracker | Employee Productivity Score Tracker</title>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap" rel="stylesheet"/>
@@ -33,6 +33,9 @@
         .material-symbols-outlined {
             font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
         }
+        html{
+          scroll-behaviour:smooth;
+        }
     </style>
 </head>
 <body class="bg-background-light dark:bg-background-dark font-display text-navy-dark dark:text-white transition-colors duration-200">
@@ -53,12 +56,58 @@
 <div class="flex items-center gap-4">
 <a href="#" class="hidden sm:block text-sm font-bold hover:text-primary transition-colors">Home</a>
 <a href="#solutions" class="hidden sm:block text-sm font-bold hover:text-primary transition-colors">Solutions</a>
+<a href="/score" class="hidden sm:block text-sm font-bold hover:text-primary transition-colors">Score</a>
 <a href="/login" ><button class="bg-primary text-white px-5 py-2.5 rounded-lg text-sm font-bold hover:brightness-110 transition-all shadow-sm">
                         Login
                     </button></a>
 </div>
 </div>
 </header>
+<!-- Flash Messages -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    <div class="fixed top-20 left-1/2 -translate-x-1/2 z-[60] w-full max-w-md px-4 space-y-3">
+      {% for category, message in messages %}
+        <div 
+          class="flash-toast bg-[#f0fdf4] border border-emerald-200 rounded-full py-2.5 pl-4 pr-3 shadow-lg shadow-emerald-900/5 flex items-center justify-between backdrop-blur-sm
+          {% if category == 'error' %}
+            bg-red-50 border-red-200
+          {% endif %}"
+        >
+          <div class="flex items-center gap-3">
+            <span class="material-symbols-outlined 
+              {% if category == 'error' %}
+                text-red-600
+              {% else %}
+                text-emerald-600
+              {% endif %}
+              text-[20px] leading-none">
+              {% if category == 'error' %}
+                error
+              {% else %}
+                check_circle
+              {% endif %}
+            </span>
+
+            <span class="text-[#1e293b] text-sm font-medium">
+              {{ message }}
+            </span>
+          </div>
+
+          <button 
+            onclick="this.closest('.flash-toast').remove()"
+            class="flex items-center justify-center p-1 rounded-full hover:bg-emerald-100 text-emerald-600 transition-colors
+            {% if category == 'error' %}
+              hover:bg-red-100 text-red-600
+            {% endif %}">
+            <span class="material-symbols-outlined text-lg">close</span>
+          </button>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endwith %}
+
 <main class="flex-1">
 <!-- Hero Section -->
 <section class="mx-auto max-w-[1200px] px-6 lg:px-10 py-16 lg:py-24">
@@ -187,4 +236,15 @@
 </div>
 </footer>
 </div>
+
+<!--flash hide-->   
+<script>
+  setTimeout(() => {
+    document.querySelectorAll('.flash-toast').forEach(toast => {
+      toast.classList.add('opacity-0', 'transition-opacity', 'duration-300');
+      setTimeout(() => toast.remove(), 300);
+    });
+  }, 3000);
+</script>
+
 </body></html>

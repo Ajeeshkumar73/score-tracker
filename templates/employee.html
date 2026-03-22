@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Score Tracker | Employee Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              colors: {
+                "primary": "#000000",
+                "background-light": "#fcfcfc",
+                "border-soft": "#e5e7eb",
+                "muted-text": "#6b7280"
+              },
+              fontFamily: {
+                "sans": ["Inter", "sans-serif"]
+              },
+              borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+            },
+          },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .circular-progress {
+            background: radial-gradient(closest-side, white 79%, transparent 80% 100%),
+                        conic-gradient(black 85%, #f3f4f6 0);
+        }
+         html {
+            scroll-behavior: smooth;
+        }
+    </style>
+</head>
+<body class="bg-background-light font-sans text-black">
+<div class="relative flex min-h-screen w-full flex-col overflow-x-hidden">
+<!--header-->
+<header class="sticky top-0 z-50 w-full border-b border-border-soft bg-white/80 backdrop-blur-md">
+<div class="mx-auto max-w-[1400px] px-6 lg:px-10 py-4 flex items-center justify-between">
+<div class="flex items-center gap-8">
+<div class="flex items-center gap-3">
+<div class="text-primary">
+</div>
+<h2 class="text-xl font-bold tracking-tight">Score Tracker</h2>
+</div>
+<nav class="hidden md:flex items-center gap-8">
+<a class="text-sm font-semibold border-b-2 border-black pb-1" href="#">Dashboard</a>
+<a class="text-sm font-medium text-muted-text hover:text-black transition-colors flex items-center gap-2" href="#task">
+    Task
+    {% if new_tasks > 0 %}
+<span class="inline-flex items-center justify-center min-w-[16px] h-4 text-[10px] font-bold text-white bg-black rounded-full px-1 animate-pulse">
+    {{ new_tasks }}
+</span>
+{% endif %}
+
+</a>
+
+</nav>
+</div>
+<div class="flex items-center gap-6">
+  <div class="relative">
+    <button id="notif-btn" class="relative">
+      <span class="material-symbols-outlined text-2xl">notifications</span>
+      <span id="notif-count"
+            class="absolute -top-1 -right-1 bg-red-600 text-white text-[10px]
+                   font-bold px-1.5 py-0.5 rounded-full {% if unread == 0 %}hidden{% endif %}">{{ unread }}</span>
+    </button>
+    <!-- Dropdown -->
+    <div id="notif-dropdown" class="hidden absolute right-0 mt-3 w-80 bg-white border border-border-soft rounded-xl shadow-2xl z-[100] overflow-hidden">
+       <div class="px-4 py-3 border-b border-border-soft flex items-center justify-between">
+         <h4 class="font-bold text-sm">Notifications</h4>
+       </div>
+       <div id="notif-list" class="max-h-[400px] overflow-y-auto divide-y divide-border-soft">
+         <!-- Notifications will load here -->
+       </div>
+       <div class="p-3 text-center border-t border-border-soft bg-gray-50">
+           <p class="text-[10px] text-muted-text">Stay updated with real-time alerts</p>
+       </div>
+    </div>
+  </div>
+<div class="flex items-center gap-3 pl-6 border-l border-border-soft group cursor-pointer">
+<div class="text-right">
+<p class="text-sm font-bold leading-none">{{ user.name }}</p>
+<p class="text-xs text-muted-text">{{ user.position }}</p>
+</div>
+<a class="text-sm font-medium text-muted-text hover:text-black transition-colors flex items-center gap-2" href="/logout">
+                           <span class="material-symbols-outlined text-sm">logout</span> Logout
+</a>
+</div>
+</div>
+</div>
+</header>
+<!-- Flash Messages -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    <div class="fixed top-20 left-1/2 -translate-x-1/2 z-[60] w-full max-w-md px-4 space-y-3">
+      {% for category, message in messages %}
+        <div 
+          class="flash-toast bg-[#f0fdf4] border border-emerald-200 rounded-full py-2.5 pl-4 pr-3 shadow-lg shadow-emerald-900/5 flex items-center justify-between backdrop-blur-sm
+          {% if category == 'error' %}
+            bg-red-50 border-red-200
+          {% endif %}"
+        >
+          <div class="flex items-center gap-3">
+            <span class="material-symbols-outlined 
+              {% if category == 'error' %}
+                text-red-600
+              {% else %}
+                text-emerald-600
+              {% endif %}
+              text-[20px] leading-none">
+              {% if category == 'error' %}
+                error
+              {% else %}
+                check_circle
+              {% endif %}
+            </span>
+
+            <span class="text-[#1e293b] text-sm font-medium">
+              {{ message }}
+            </span>
+          </div>
+
+          <button 
+            onclick="this.closest('.flash-toast').remove()"
+            class="flex items-center justify-center p-1 rounded-full hover:bg-emerald-100 text-emerald-600 transition-colors
+            {% if category == 'error' %}
+              hover:bg-red-100 text-red-600
+            {% endif %}">
+            <span class="material-symbols-outlined text-lg">close</span>
+          </button>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endwith %}
+
+<!--main div-->
+<main class="flex-1 mx-auto w-full max-w-[1400px] px-6 lg:px-10 py-10">
+<section class="mb-12">
+<div class="bg-white rounded-xl border border-border-soft p-8 flex flex-col md:flex-row items-center justify-between gap-8">
+<div class="space-y-2">
+<h1 class="text-3xl font-black tracking-tight">Welcome back, {{ user.name }}</h1>
+<p class="text-muted-text max-w-md">Here's your productivity overview this week. Keep up the great momentum!</p>
+</div>
+<div class="flex items-center gap-10">
+<div class="text-center">
+<p class="text-xs font-bold text-muted-text uppercase tracking-widest mb-3">Weekly Score</p>
+<div class="relative w-32 h-32 flex items-center justify-center rounded-full circular-progress">
+<span class="text-3xl font-black">{{ score }}</span>
+</div>
+</div>
+<div class="space-y-1">
+<div class="flex items-center gap-2 text-sm">
+<span class="w-3 h-3 bg-black rounded-full"></span>
+<span class="font-medium">Active Tasks: {{ total_tasks }}</span>
+</div>
+<div class="flex items-center gap-2 text-sm">
+<span class="w-3 h-3 bg-neutral-200 rounded-full"></span>
+<span class="font-medium text-muted-text">Pending: {{ pending }}</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+
+<section class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+<div class="bg-white border border-border-soft p-8 rounded-xl">
+<p class="text-sm font-bold text-muted-text uppercase tracking-wider mb-2">Total Tasks</p>
+<div class="flex items-baseline gap-2">
+<span class="text-5xl font-black tracking-tighter">{{ total_tasks }}</span>
+<span class="text-xs font-bold text-black/40">Tasks</span>
+</div>
+</div>
+<div class="bg-white border border-border-soft p-8 rounded-xl">
+<p class="text-sm font-bold text-muted-text uppercase tracking-wider mb-2">Completed</p>
+<div class="flex items-baseline gap-2">
+<span class="text-5xl font-black tracking-tighter">{{ completed }}</span>
+<span class="text-xs font-bold text-black/40">Tasks</span>
+</div>
+</div>
+<div class="bg-white border border-border-soft p-8 rounded-xl">
+<p class="text-sm font-bold text-muted-text uppercase tracking-wider mb-2">Pending</p>
+<div class="flex items-baseline gap-2">
+<span class="text-5xl font-black tracking-tighter">{{ pending }}</span>
+<span class="text-xs font-bold text-black/40">Tasks</span>
+</div>
+</div>
+</section>
+
+<section id="task" class="bg-white border border-border-soft rounded-xl overflow-hidden">
+<div class="px-8 py-6 border-b border-border-soft flex items-center justify-between">
+<h3 class="text-xl font-bold">Your Tasks</h3>
+<div class="flex items-center gap-3">
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-muted-text text-sm">search</span>
+<input id="task-search"  class="pl-10 pr-4 py-2 text-sm border border-border-soft rounded-lg focus:outline-none focus:ring-1 focus:ring-black w-64" placeholder="Search tasks..." type="text"/>
+</div>
+</div>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-neutral-50/50">
+<th class="px-8 py-4 text-xs font-black text-muted-text uppercase tracking-widest">Task Name</th>
+<th class="px-8 py-4 text-xs font-black text-muted-text uppercase tracking-widest">Status</th>
+<th class="px-8 py-4 text-xs font-black text-muted-text uppercase tracking-widest">Assigned</th>
+<th class="px-8 py-4 text-xs font-black text-muted-text uppercase tracking-widest">Deadline</th>
+<th class="px-8 py-4 text-xs font-black text-muted-text uppercase tracking-widest">Submited</th>
+<th class="px-8 py-4 text-xs font-black text-muted-text uppercase tracking-widest"></th>
+<th class="px-8 py-4 text-xs font-black text-muted-text uppercase tracking-widest text-right">Actions</th>
+</tr>
+</thead>
+<tbody id="tasks-body" class="divide-y divide-border-soft">
+{% for t in tasks %}
+<tr id="task-{{ t._id }}" class="hover:bg-neutral-50/30 transition-colors" data-task-name="{{ t.task_name | lower }}">
+<td class="px-8 py-6">
+<span class="font-bold text-sm block">{{ t.task_name }}</span>
+{% if t.status == "rejected" and t.correction_msg %}
+<div class="mt-2 text-[10px] bg-red-50 border border-red-100 rounded p-2 text-red-700">
+    <span class="font-bold uppercase">Manager Note:</span> {{ t.correction_msg }}
+</div>
+{% endif %}
+</td>
+<td class="px-8 py-6">
+<span class="">{% if t.status == "completed" %}
+<span class="inline-flex items-center rounded-full bg-green-50 px-2.5 py-1 text-xs font-bold text-green-700">
+Completed
+</span>
+{% elif t.status == "in_progress" %}
+<span class="inline-flex items-center rounded-full bg-yellow-50 px-2.5 py-1 text-xs font-bold text-yellow-700">
+In Progress
+</span>
+{% elif t.status == "pending_verification" %}
+<span class="inline-flex items-center rounded-full bg-blue-50 px-2.5 py-1 text-xs font-bold text-blue-700">
+Pending Verification
+</span>
+{% elif t.status == "rejected" %}
+<span class="inline-flex items-center rounded-full bg-orange-50 px-2.5 py-1 text-xs font-bold text-orange-700">
+Needs Correction
+</span>
+{% elif t.status == "delayed" %}
+<span class="inline-flex items-center rounded-full bg-red-50 px-2.5 py-1 text-xs font-bold text-red-700">
+Delayed
+</span>
+{% else %}
+<span class="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-1 text-xs font-bold text-gray-700">
+Assigned
+</span>
+{% endif %}</span>
+</td>
+<td class="px-8 py-6 text-sm text-muted-text" id="date" data-date="{{ t.assigned_date }}">-</td>
+<td class="px-8 py-6 text-sm text-muted-text" id="date" data-date="{{ t.deadline }}">-</td>
+<td class="px-8 py-6 text-sm text-muted-text" id="date" data-date="{{ t.submit_date }}">-</td>
+<td>
+  <a href="/chat/{{ t._id }}">
+    <button class="text-xs font-bold underline underline-offset-4
+      {% if t._id|string in unread_tasks %}
+        text-black animate-pulse
+      {% else %}
+        text-muted-text hover:text-black
+      {% endif %}">
+      Chat
+    </button>
+  </a>
+</td>
+<td class="px-8 py-6 text-right">
+<div class="flex items-center justify-end gap-3">
+    {% if t.status == "assigned" or t.status == "rejected" %}
+            <a class="bg-black text-white px-4 py-2 rounded text-xs font-bold hover:bg-neutral-800 transition-colors" href="/accept/{{ t._id }}">Accept</a>
+        {% elif t.status == "in_progress" %}
+            <a class="bg-black text-white px-4 py-2 rounded text-xs font-bold hover:bg-neutral-800 transition-colors" href="/submit/{{ t._id }}">Submit</a>
+        {% elif t.status == "pending_verification" %}
+            <span class="text-xs font-bold text-muted-text italic">Pending Review</span>
+        {% else %}
+            <p class="bg-black text-white px-4 py-2 rounded text-xs font-bold hover:bg-neutral-800 transition-colors">Completed</p>
+        {% endif %}
+</div>
+</td>
+</tr>
+{% endfor %}
+
+</tbody>
+</table>
+</div>
+<div class="px-8 py-4 bg-neutral-50 border-t border-border-soft flex items-center justify-between">
+<p id="pagination-info" class="text-xs text-muted-text">Showing 1-4 of {{ tasks|length }} tasks</p>
+<div class="flex gap-2">
+<button id="prev-btn" class="p-1 border border-border-soft rounded hover:bg-white transition-colors">
+<span class="material-symbols-outlined text-sm">chevron_left</span>
+</button>
+<button id="next-btn" class="p-1 border border-border-soft rounded hover:bg-white transition-colors">
+<span class="material-symbols-outlined text-sm">chevron_right</span>
+</button>
+</div>
+</div>
+</section>
+</main>
+<footer class="border-t border-border-soft bg-white py-12">
+<div class="mx-auto max-w-[1400px] px-6 lg:px-10 flex flex-col md:flex-row items-center justify-between gap-8">
+<div class="flex items-center gap-3">
+<div class="text-black">
+</div>
+<span class="text-lg font-bold">Score Tracker</span>
+</div>
+<div class="flex items-center gap-8 text-sm font-medium text-muted-text">
+<a class="hover:text-black" href="#">Documentation</a>
+<a class="hover:text-black" href="#">Support</a>
+<a class="hover:text-black" href="#">Settings</a>
+<a class="text-black flex items-center gap-1" href="/logout">
+<span class="material-symbols-outlined text-sm">logout</span> Logout
+                    </a>
+</div>
+<p class="text-xs text-muted-text">© 2026 Score Tracker Inc. All rights reserved.</p>
+</div>
+</footer>
+
+
+
+<script>
+document.querySelectorAll("#date").forEach(td => {
+    let raw = td.getAttribute("data-date");
+    if (!raw || raw === "None") {
+        td.innerText = "-";
+        return;
+    }
+
+    let d = new Date(raw);
+
+    let day = String(d.getDate()).padStart(2, '0');
+    let month = String(d.getMonth() + 1).padStart(2, '0');
+    let year = d.getFullYear();
+
+    td.innerText = `${day}-${month}-${year}`;
+});
+</script>
+
+<!--search-->
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const searchInput = document.getElementById("task-search");
+  const tableBody = document.getElementById("tasks-body"); // now it exists
+  const rows = Array.from(tableBody.querySelectorAll("tr"));
+
+  searchInput.addEventListener("input", () => {
+    const term = searchInput.value.toLowerCase();
+
+    rows.forEach(row => {
+      const taskName = row.dataset.taskName; // already set in HTML
+      if (taskName.includes(term)) {
+        row.style.display = ""; // show the row
+      } else {
+        row.style.display = "none"; // hide the row
+      }
+    });
+  });
+});
+</script>
+
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const rows = Array.from(document.querySelectorAll("#tasks-body tr"));
+  const pageSize = 4;
+  let currentPage = 1;
+  const totalRows = rows.length;
+  const totalPages = Math.ceil(totalRows / pageSize);
+
+  const info = document.getElementById("pagination-info");
+  const prevBtn = document.getElementById("prev-btn");
+  const nextBtn = document.getElementById("next-btn");
+  const searchInput = document.getElementById("task-search");
+
+  // Function to show a specific page
+  function showPage(page) {
+    const start = (page - 1) * pageSize;
+    const end = start + pageSize;
+
+    rows.forEach((row, i) => {
+      row.style.display = (i >= start && i < end) ? "" : "none";
+    });
+
+    const startNum = totalRows === 0 ? 0 : start + 1;
+    const endNum = Math.min(end, totalRows);
+    info.innerText = `Showing ${startNum}-${endNum} of ${totalRows} tasks`;
+
+    // Enable/disable buttons
+    prevBtn.disabled = page === 1;
+    nextBtn.disabled = page === totalPages;
+  }
+
+  // Initial display
+  showPage(currentPage);
+
+  // Button events
+  prevBtn.addEventListener("click", () => {
+    if (currentPage > 1) {
+      currentPage--;
+      showPage(currentPage);
+    }
+  });
+
+  nextBtn.addEventListener("click", () => {
+    if (currentPage < totalPages) {
+      currentPage++;
+      showPage(currentPage);
+    }
+  });
+
+});
+</script>
+
+<!--flash hide-->   
+<script>
+  setTimeout(() => {
+    document.querySelectorAll('.flash-toast').forEach(toast => {
+      toast.classList.add('opacity-0', 'transition-opacity', 'duration-300');
+      setTimeout(() => toast.remove(), 300);
+    });
+  }, 3000);
+</script>
+
+<!--notifications-->
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+<script>
+const socket = io();
+
+// join personal room
+socket.emit("join_user", {
+  user_id: "{{ session['user_id'] }}"
+});
+
+// receive notification
+socket.on("new_notification", data => {
+  const bell = document.getElementById("notif-count");
+  bell.classList.remove("hidden");
+  bell.innerText = parseInt(bell.innerText || 0) + 1;
+
+   bell.classList.add("animate-bounce");
+  setTimeout(() => bell.classList.remove("animate-bounce"), 800);
+  
+  if (!document.getElementById("notif-dropdown").classList.contains("hidden")) {
+     loadNotifications();
+  }
+});
+
+// Notification Toggle
+const notifBtn = document.getElementById("notif-btn");
+const notifDropdown = document.getElementById("notif-dropdown");
+const notifList = document.getElementById("notif-list");
+
+notifBtn.addEventListener("click", (e) => {
+   e.stopPropagation();
+   notifDropdown.classList.toggle("hidden");
+   if (!notifDropdown.classList.contains("hidden")) {
+      loadNotifications();
+   }
+});
+
+document.addEventListener("click", () => notifDropdown.classList.add("hidden"));
+
+function loadNotifications() {
+   fetch("/get_notifications")
+      .then(r => r.json())
+      .then(data => {
+         notifList.innerHTML = "";
+         if (data.notifications.length === 0) {
+            notifList.innerHTML = '<div class="p-8 text-center text-xs text-muted-text">No new alerts.</div>';
+            return;
+         }
+         data.notifications.forEach(n => {
+            const item = document.createElement("div");
+            item.className = "p-4 hover:bg-gray-50 cursor-pointer transition-colors";
+            
+            let link = "/employee";
+            if (n.type === "chat") link = `/chat/${n.task_id}`;
+            else if (n.type === "rejection") link = `#task-${n.task_id}`;
+            
+            item.innerHTML = `
+               <div class="flex flex-col gap-1">
+                  <p class="text-xs font-medium text-black">${n.message}</p>
+                  <span class="text-[10px] text-muted-text">${n.time || ''}</span>
+               </div>
+            `;
+            item.onclick = () => {
+               fetch(`/mark_seen/${n._id}`, {method: 'POST'})
+                  .then(() => {
+                     window.location.href = link;
+                  });
+            };
+            notifList.appendChild(item);
+         });
+      });
+}
+</script>
+
+
+
+</body>
+</html>
