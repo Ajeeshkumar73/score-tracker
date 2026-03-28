@@ -4,10 +4,11 @@ eventlet.monkey_patch()
 from flask import Flask, render_template, request, redirect, session, flash
 from pymongo import MongoClient
 from werkzeug.security import generate_password_hash, check_password_hash
-from datetime import datetime
+from datetime import datetime, timedelta
 from bson import ObjectId
 import numpy as np
 import joblib, os
+from collections import defaultdict
 from flask_mail import Mail, Message
 
 from flask_socketio import SocketIO, emit, join_room
@@ -26,7 +27,7 @@ except:
     model = joblib.load("productivity_classifier_model.pkl")
 
 # Session Configuration
-from datetime import timedelta
+# timedelta already imported above
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=7)
 app.config['SESSION_REFRESH_EACH_REQUEST'] = True
 
@@ -131,7 +132,9 @@ def manager():
 
     ranking = get_ranking()
     free_employees = get_free_employees()
-    skills = get_employee_skills()
+    recommendations = get_smart_recommendations()
+    # Derive weekly counts from recommendations (no extra DB queries needed)
+    weekly_task_counts = {r["id"]: r["weekly_count"] for r in recommendations}
 
     unread_chats = chats.count_documents({
         "seen": False,
@@ -150,14 +153,16 @@ def manager():
 
     return render_template(
         "manager.html",
-        users=employees, 
+        users=employees,
         user=user,
-        skills=skills,
+        recommendations=recommendations,
         unread=unread,
         free_employees=free_employees,
         tasks=latest_tasks,
         ranking=ranking,
-        pending_verification=pending_verification
+        pending_verification=pending_verification,
+        weekly_task_counts=weekly_task_counts,
+        weekly_limit=WEEKLY_TASK_LIMIT
     )
 
 @app.route("/employee_tasks/<emp_id>")
@@ -197,6 +202,18 @@ def assign():
 
     # get employee details
     employee = users.find_one({"_id": ObjectId(employee_id)})
+
+    # ---- WEEKLY LIMIT CHECK ----
+    weekly_count = count_weekly_tasks(employee_id)
+    if weekly_count >= WEEKLY_TASK_LIMIT:
+        flash(
+            f"Cannot assign task — {employee['name']} has already received "
+            f"{weekly_count} tasks this week (limit: {WEEKLY_TASK_LIMIT}). "
+            f"Allow them to complete existing work first.",
+            "error"
+        )
+        return redirect("/manager")
+    # ----------------------------
 
     task_name = request.form["task"]
     category = request.form["category"]
@@ -241,8 +258,12 @@ Task Management System
     # Update productivity score immediately on assignment
     calculate_productivity_ml(employee_id)
 
-    # ----------------------------
-    flash(f"Task assigned successfully to {employee['name']}!", "success")
+    remaining = WEEKLY_TASK_LIMIT - (weekly_count + 1)
+    flash(
+        f"Task assigned to {employee['name']}! "
+        f"They can receive {remaining} more task(s) this week.",
+        "success"
+    )
     return redirect("/manager")
 
 
@@ -539,6 +560,28 @@ def get_ranking():
     ranking = sorted(ranking, key=lambda x: x["score"], reverse=True)
     return ranking[:5]
 
+# -------- WEEKLY LIMIT HELPERS --------
+WEEKLY_TASK_LIMIT = 5
+
+def get_week_start():
+    """Return the start of the current ISO week (Monday 00:00:00)."""
+    today = datetime.now()
+    return today - timedelta(days=today.weekday(), hours=today.hour,
+                             minutes=today.minute, seconds=today.second,
+                             microseconds=today.microsecond)
+
+def count_weekly_tasks(employee_id):
+    """Count tasks assigned to an employee in the current week."""
+    week_start = get_week_start()
+    return tasks.count_documents({
+        "employee_id": str(employee_id),
+        "assigned_date": {"$gte": week_start}
+    })
+
+def is_weekly_limit_reached(employee_id):
+    return count_weekly_tasks(employee_id) >= WEEKLY_TASK_LIMIT
+# ---------------------------------------
+
 def get_free_employees():
     busy_ids = tasks.distinct(
         "employee_id",
@@ -552,45 +595,146 @@ def get_free_employees():
 
     return list(free_users)[:5]
 
-def get_employee_skills():
-    employees = users.find({"role": "employee"})
-    result = []
+def get_smart_recommendations():
+    """
+    Returns employees ranked by a composite recommendation score.
+    Uses 4 bulk MongoDB queries regardless of employee count (O(1) DB round-trips).
 
-    for e in employees:
+    Score formula:
+      Productivity  40%  — ML-based historical performance
+      Skill Fit     30%  — avg completion time in their strongest category
+      Workload      20%  — remaining weekly task capacity
+      Availability  10%  — currently free vs in-progress
+    """
+    all_employees = list(users.find({"role": "employee"}))
+    if not all_employees:
+        return []
+
+    # ── 1. All productivity scores (one query) ──────────────────────────
+    all_scores_map = {s["employee_id"]: float(s.get("score", 0))
+                      for s in scores.find()}
+
+    # ── 2. Currently busy employee IDs (one query) ──────────────────────
+    busy_emp_ids = set(tasks.distinct("employee_id", {"status": "in_progress"}))
+
+    # ── 3. Weekly task counts for all employees (one aggregation) ───────
+    week_start = get_week_start()
+    weekly_agg = tasks.aggregate([
+        {"$match": {"assigned_date": {"$gte": week_start}}},
+        {"$group": {"_id": "$employee_id", "count": {"$sum": 1}}}
+    ])
+    weekly_counts_map = {item["_id"]: item["count"] for item in weekly_agg}
+
+    # ── 4. All category skill data (one aggregation across all employees) 
+    cat_agg = list(logs.aggregate([
+        {"$match": {"duration": {"$ne": None}}},
+        {"$lookup": {
+            "from": "tasks",
+            "localField": "task_id",
+            "foreignField": "_id",
+            "as": "task_doc"
+        }},
+        {"$unwind": "$task_doc"},
+        {"$group": {
+            "_id": {
+                "employee_id": "$employee_id",
+                "category": "$task_doc.category"
+            },
+            "avg_time": {"$avg": "$duration"},
+            "task_count": {"$sum": 1}
+        }},
+        {"$sort": {"avg_time": 1}}
+    ]))
+
+    # Group categories by employee (already sorted asc by avg_time)
+    # Use .get() because older tasks may not have the 'category' field
+    # and MongoDB may omit the key from the _id subdocument entirely.
+    emp_categories = defaultdict(list)
+    for item in cat_agg:
+        emp_id   = item["_id"].get("employee_id")
+        cat_name = item["_id"].get("category")   # None for tasks without category
+        if not emp_id or not cat_name:            # skip orphaned / uncategorised logs
+            continue
+        emp_categories[emp_id].append({
+            "category": cat_name,
+            "avg_time": round(item["avg_time"], 1),
+            "count":    item["task_count"]
+        })
+
+    # ── Build recommendation entries ────────────────────────────────────
+    results = []
+    for e in all_employees:
         emp_id = str(e["_id"])
 
-        pipeline = [
-            {"$match": {"employee_id": emp_id}},
-            {"$lookup": {
-                "from": "tasks",
-                "localField": "task_id",
-                "foreignField": "_id",
-                "as": "task"
-            }},
-            {"$unwind": "$task"},
-            {"$group": {
-                "_id": "$task.category",
-                "avg_time": {"$avg": "$duration"}
-            }},
-            {"$sort": {"avg_time": 1}},
-            {"$limit": 1}
-        ]
+        # Workload
+        weekly_count = weekly_counts_map.get(emp_id, 0)
+        at_limit     = weekly_count >= WEEKLY_TASK_LIMIT
+        load_score   = round(((WEEKLY_TASK_LIMIT - min(weekly_count, WEEKLY_TASK_LIMIT))
+                               / WEEKLY_TASK_LIMIT) * 100, 1)
 
-        best = list(logs.aggregate(pipeline))
+        # Productivity
+        prod_score = round(all_scores_map.get(emp_id, 0.0), 1)
 
-        if best:
-            result.append({
-                "id": emp_id,
-                "name": e["name"],
-                "best_category": best[0]["_id"],
-                "avg_time": round(best[0]["avg_time"], 1) if best[0]["avg_time"] else 0
-            })
+        # Availability
+        is_free    = emp_id not in busy_emp_ids
+        avail_score = 100.0 if is_free else 40.0
 
-    return result
+        # Skill fit — 240 min (4 hrs) used as baseline; faster → higher score
+        cat_skills = emp_categories.get(emp_id, [])
+        if cat_skills:
+            best          = cat_skills[0]
+            best_category = best.get("category") or "other"
+            avg_time      = best["avg_time"]
+            skill_score   = round(max(0.0, min(100.0, 100 - (avg_time / 240 * 100))), 1)
+        else:
+            best_category = ""
+            avg_time      = None
+            skill_score   = 50.0   # neutral when no history
+
+        # Composite score
+        composite = (
+            prod_score  * 0.40 +
+            skill_score * 0.30 +
+            load_score  * 0.20 +
+            avail_score * 0.10
+        )
+        rec_score = round(min(100.0, max(0.0, composite)), 1)
+
+        results.append({
+            "id":               emp_id,
+            "name":             e["name"],
+            "position":         e.get("position", ""),
+            "best_category":    best_category,
+            "avg_time":         avg_time,
+            "category_skills":  cat_skills,
+            "weekly_count":     weekly_count,
+            "at_limit":         at_limit,
+            "load_score":       load_score,
+            "prod_score":       prod_score,
+            "is_free":          is_free,
+            "skill_score":      skill_score,
+            "recommendation_score": rec_score
+        })
+
+    # Best match first
+    results.sort(key=lambda x: x["recommendation_score"], reverse=True)
+    return results
 
 @app.route("/auto_assign/<emp_id>", methods=["POST"])
 def auto_assign(emp_id):
     user = users.find_one({"_id": ObjectId(emp_id)})
+
+    # ---- WEEKLY LIMIT CHECK ----
+    weekly_count = count_weekly_tasks(emp_id)
+    if weekly_count >= WEEKLY_TASK_LIMIT:
+        flash(
+            f"Cannot assign task — {user['name']} has already received "
+            f"{weekly_count} tasks this week (limit: {WEEKLY_TASK_LIMIT}). "
+            f"Allow them to complete existing work first.",
+            "error"
+        )
+        return redirect("/manager")
+    # ----------------------------
 
     assigned_date = datetime.now()
     deadline = datetime.strptime(request.form["deadline"], "%Y-%m-%d")
@@ -602,6 +746,7 @@ def auto_assign(emp_id):
         "category": request.form["category"],
         "employee_id": emp_id,
         "employee_name": user["name"],
+        "manager_id": str(session["user_id"]),
         "assigned_date": assigned_date,
         "deadline": deadline,
         "assigned_time": assigned_minutes,
@@ -611,6 +756,12 @@ def auto_assign(emp_id):
     # Update productivity score immediately on assignment
     calculate_productivity_ml(emp_id)
 
+    remaining = WEEKLY_TASK_LIMIT - (weekly_count + 1)
+    flash(
+        f"Task auto-assigned to {user['name']}! "
+        f"They can receive {remaining} more task(s) this week.",
+        "success"
+    )
     return redirect("/manager")
 
 @app.route("/get_notifications")

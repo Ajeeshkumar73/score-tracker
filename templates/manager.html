@@ -51,7 +51,19 @@
           </div>
           <nav class="hidden md:flex items-center gap-8">
             <a class="text-sm font-semibold text-black underline underline-offset-4" href="#">Dashboard</a>
-            <a class="text-sm font-semibold text-text-muted hover:text-black transition-colors" href="#team">Team</a>
+            <a class="text-sm font-semibold text-text-muted hover:text-black transition-colors" href="#team">Assigned work & Progress</a>
+            <a class="relative inline-flex items-center gap-1.5 text-sm font-semibold transition-colors
+                       {% if pending_verification | length > 0 %}text-black{% else %}text-text-muted hover:text-black{% endif %}"
+               href="#Verification">
+              Task Verification
+              {% if pending_verification | length > 0 %}
+              <span class="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1
+                           rounded-full bg-red-600 text-white text-[10px] font-black leading-none
+                           animate-pulse">
+                {{ pending_verification | length }}
+              </span>
+              {% endif %}
+            </a>
             <a class="text-sm font-semibold text-text-muted hover:text-black transition-colors"
               href="#Recommendation">Recommendations</a>
           </nav>
@@ -139,18 +151,25 @@
         <form class="flex flex-col lg:flex-row gap-4" action="/assign" method="post"
           onsubmit="return validateTaskForm()">
           <script>
-            function validateTaskForm() {
+          function validateTaskForm() {
               const task = document.getElementsByName("task")[0].value.trim();
               const category = document.getElementsByName("category")[0].value;
-              const employee = document.getElementsByName("employee")[0].value;
+              const employeeSelect = document.getElementById("assign-employee-select");
+              const employee = employeeSelect.value;
               const deadline = document.getElementsByName("deadline")[0].value;
 
               if (!task) {
                 alert("Please enter a task description");
                 return false;
               }
-              if (employee === "Select Employee") {
+              if (!employee) {
                 alert("Please select an employee");
+                return false;
+              }
+              // Check if the selected option is disabled (at limit)
+              const selectedOption = employeeSelect.options[employeeSelect.selectedIndex];
+              if (selectedOption.disabled) {
+                alert("This employee has reached their weekly task limit. Please choose another employee.");
                 return false;
               }
               if (!deadline) {
@@ -184,11 +203,21 @@
             </select>
           </div>
           <div class="w-full lg:w-48">
-            <select name="employee"
+            <select name="employee" id="assign-employee-select"
               class="w-full bg-white text-black border border-border-hard rounded-lg px-4 py-3 text-sm focus:ring-1 focus:ring-gray-400">
-              <option>Select Employee</option>
+              <option value="">Select Employee</option>
               {% for u in users %}
-              <option value="{{ u._id }}">{{ u.name }}</option>
+              {% set weekly = weekly_task_counts.get(u._id|string, 0) %}
+              <option value="{{ u._id }}"
+                data-weekly="{{ weekly }}"
+                {% if weekly >= weekly_limit %}disabled{% endif %}>
+                {{ u.name }}
+                {% if weekly >= weekly_limit %}
+                  (limit reached)
+                {% else %}
+                  ({{ weekly }}/{{ weekly_limit }} this week)
+                {% endif %}
+              </option>
               {% endfor %}
             </select>
           </div>
@@ -202,6 +231,15 @@
             Assign Task
           </button>
         </form>
+        <!-- Weekly limit info banner -->
+        <div class="mt-4 flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-lg px-4 py-3">
+          <span class="material-symbols-outlined text-amber-600 text-[18px] mt-0.5">info</span>
+          <p class="text-xs text-amber-800">
+            <strong>Weekly task limit: {{ weekly_limit }} tasks per employee.</strong>
+            Each Monday the counter resets. Employees with a full week are disabled until they clear their backlog,
+            protecting their productivity and well-being.
+          </p>
+        </div>
       </section>
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -247,74 +285,176 @@
         </div>
       </div>
 
-      <div id="Recommendation" class="space-y-4">
-        <div class="flex items-center gap-2">
-          <span class="material-symbols-outlined text-black">auto_awesome</span>
-          <h3 class="text-lg font-bold">Smart Recommendations</h3>
-        </div>
-
-        <div class="bg-black text-white rounded-xl p-6">
-          <p class="text-sm text-gray-400 mb-6">
-            Analysis of current workload and historical performance.
-          </p>
-
-          <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse">
-              <thead>
-                <tr class="border-b border-white/20">
-                  <th class="py-3 text-xs font-bold text-gray-400 uppercase">Employee</th>
-                  <th class="py-3 text-xs font-bold text-gray-400 uppercase">Best At</th>
-                  <th class="py-3 text-xs font-bold text-gray-400 uppercase">Avg Time</th>
-                  <th class="py-3 text-xs font-bold text-gray-400 uppercase text-right">Action</th>
-                </tr>
-              </thead>
-
-              <tbody class="divide-y divide-white/10">
-                {% for s in skills %}
-                <tr class="hover:bg-white/5 transition-colors">
-                  <td class="py-4 text-sm font-medium">{{ s.name }}</td>
-                  <td class="py-4 text-sm">{{ s.best_category }}</td>
-                  <td class="py-4 text-sm text-gray-400">{{ s.avg_time }} mins</td>
-                  <td class="py-4 text-right">
-                    <form action="/auto_assign/{{ s.id }}" method="post" class="flex justify-end gap-2"
-                      onsubmit="return validateAutoAssign(this)">
-                      <script>
-                        function validateAutoAssign(form) {
-                          const task = form.task.value.trim();
-                          const deadline = form.deadline.value;
-                          if (!task) {
-                            alert("Please enter a task");
-                            return false;
-                          }
-                          if (!deadline) {
-                            alert("Please select a deadline");
-                            return false;
-                          }
-                          const selectedDate = new Date(deadline);
-                          const today = new Date();
-                          today.setHours(0, 0, 0, 0);
-                          if (selectedDate < today) {
-                            alert("Deadline cannot be in the past");
-                            return false;
-                          }
-                          return true;
-                        }
-                      </script>
-                      <input type="hidden" name="category" value="{{ s.best_category }}">
-                      <input name="task" placeholder="Task" class="text-xs px-2 py-1 rounded text-black w-24" required>
-                      <input type="date" name="deadline" class="text-xs px-2 py-1 rounded text-black" required>
-                      <button type="submit"
-                        class="text-xs font-bold bg-white text-black px-3 py-1.5 rounded hover:bg-gray-200">
-                        Assign
-                      </button>
-                    </form>
-                  </td>
-                </tr>
-                {% endfor %}
-              </tbody>
-            </table>
+      <div id="Recommendation" class="space-y-5">
+        <!-- Header + Category filter -->
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div class="flex items-center gap-2">
+            <span class="material-symbols-outlined text-black">auto_awesome</span>
+            <h3 class="text-lg font-bold">Smart Recommendations</h3>
+          </div>
+          <div class="flex flex-wrap gap-1.5" id="cat-filters">
+            <button class="cat-btn px-3 py-1 rounded-full text-xs font-bold transition-all bg-black text-white" data-cat="all">All</button>
+            <button class="cat-btn px-3 py-1 rounded-full text-xs font-bold transition-all bg-white border border-gray-200 text-gray-500 hover:border-black hover:text-black" data-cat="coding">Coding</button>
+            <button class="cat-btn px-3 py-1 rounded-full text-xs font-bold transition-all bg-white border border-gray-200 text-gray-500 hover:border-black hover:text-black" data-cat="testing">Testing</button>
+            <button class="cat-btn px-3 py-1 rounded-full text-xs font-bold transition-all bg-white border border-gray-200 text-gray-500 hover:border-black hover:text-black" data-cat="design">Design</button>
+            <button class="cat-btn px-3 py-1 rounded-full text-xs font-bold transition-all bg-white border border-gray-200 text-gray-500 hover:border-black hover:text-black" data-cat="documentation">Docs</button>
           </div>
         </div>
+
+        <!-- Score legend -->
+        <div class="flex flex-wrap gap-x-5 gap-y-1 text-xs text-gray-400">
+          <span class="flex items-center gap-1.5"><span class="inline-block w-2 h-2 rounded-full bg-emerald-400"></span>Productivity 40%</span>
+          <span class="flex items-center gap-1.5"><span class="inline-block w-2 h-2 rounded-full bg-blue-400"></span>Skill Fit 30%</span>
+          <span class="flex items-center gap-1.5"><span class="inline-block w-2 h-2 rounded-full bg-violet-400"></span>Workload 20%</span>
+          <span class="flex items-center gap-1.5"><span class="inline-block w-2 h-2 rounded-full bg-amber-400"></span>Availability 10%</span>
+        </div>
+
+        <!-- Cards -->
+        {% if recommendations %}
+        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4" id="rec-grid">
+          {% for r in recommendations %}
+          <div class="rec-card {% if loop.index > 6 %}rec-extra{% endif %} bg-white border border-border-soft rounded-xl p-5 shadow-sm hover:shadow-md hover:border-gray-300 transition-all {% if r.at_limit %}opacity-60{% endif %}"
+               data-best-cat="{{ (r.best_category or 'other') | lower }}"
+               {% if loop.index > 6 %}style="display:none"{% endif %}>
+
+            <!-- Top row: rank + badges + score -->
+            <div class="flex items-start justify-between mb-4">
+              <div class="flex flex-col gap-1.5">
+                <span class="text-[10px] font-black text-gray-300 tracking-widest">#{{ loop.index }} PICK</span>
+                <div class="flex gap-1 flex-wrap">
+                  {% if r.is_free %}
+                  <span class="inline-flex items-center gap-1 bg-emerald-50 text-emerald-700 text-[10px] font-bold px-2 py-0.5 rounded-full">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>Free
+                  </span>
+                  {% else %}
+                  <span class="inline-flex items-center gap-1 bg-yellow-50 text-yellow-700 text-[10px] font-bold px-2 py-0.5 rounded-full">
+                    <span class="w-1.5 h-1.5 rounded-full bg-yellow-500"></span>Busy
+                  </span>
+                  {% endif %}
+                  {% if r.at_limit %}
+                  <span class="inline-flex items-center bg-red-50 text-red-600 text-[10px] font-bold px-2 py-0.5 rounded-full">
+                    Limit Reached
+                  </span>
+                  {% endif %}
+                </div>
+              </div>
+              <!-- Composite score dial -->
+              <div class="text-right">
+                <div class="text-3xl font-black leading-none tabular-nums
+                  {% if r.recommendation_score >= 70 %}text-emerald-600
+                  {% elif r.recommendation_score >= 40 %}text-amber-500
+                  {% else %}text-red-500{% endif %}">
+                  {{ r.recommendation_score }}
+                </div>
+                <div class="text-[10px] text-gray-400 mt-0.5 font-medium">rec. score</div>
+              </div>
+            </div>
+
+            <!-- Name + Position -->
+            <div class="mb-4">
+              <p class="font-bold text-sm leading-tight">{{ r.name }}</p>
+              {% if r.position %}<p class="text-[11px] text-gray-400 mt-0.5">{{ r.position }}</p>{% endif %}
+            </div>
+
+            <!-- Score breakdown bars -->
+            <div class="space-y-2.5 mb-4">
+              <div>
+                <div class="flex justify-between text-[11px] mb-1">
+                  <span class="text-gray-400">Productivity</span>
+                  <span class="font-bold text-gray-700">{{ r.prod_score }}%</span>
+                </div>
+                <div class="h-1 bg-gray-100 rounded-full overflow-hidden">
+                  <div class="h-full bg-emerald-400 rounded-full" style="width:{{ r.prod_score }}%"></div>
+                </div>
+              </div>
+              <div>
+                <div class="flex justify-between text-[11px] mb-1">
+                  <span class="text-gray-400">Skill Fit <span class="font-bold text-blue-600 capitalize">{{ r.best_category }}</span></span>
+                  <span class="font-bold text-gray-700">{{ r.skill_score }}%</span>
+                </div>
+                <div class="h-1 bg-gray-100 rounded-full overflow-hidden">
+                  <div class="h-full bg-blue-400 rounded-full" style="width:{{ r.skill_score }}%"></div>
+                </div>
+              </div>
+              <div>
+                <div class="flex justify-between text-[11px] mb-1">
+                  <span class="text-gray-400">Weekly Capacity</span>
+                  <span class="font-bold {% if r.at_limit %}text-red-500{% else %}text-gray-700{% endif %}">{{ r.weekly_count }}/{{ weekly_limit }}</span>
+                </div>
+                <div class="h-1 bg-gray-100 rounded-full overflow-hidden">
+                  <div class="h-full rounded-full
+                    {% if r.at_limit %}bg-red-400
+                    {% elif r.weekly_count >= (weekly_limit - 1) %}bg-amber-400
+                    {% else %}bg-violet-400{% endif %}"
+                    style="width:{{ r.load_score }}%"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Category skill chips -->
+            {% if r.category_skills %}
+            <div class="flex flex-wrap gap-1 mb-4">
+              {% for cs in r.category_skills %}
+              <span class="inline-flex items-center text-[10px] bg-gray-50 border border-gray-100 px-2 py-0.5 rounded-full text-gray-500 capitalize">
+                {{ cs.category }} · {{ cs.avg_time }}m
+              </span>
+              {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-[11px] text-gray-300 mb-4 italic">No task history yet</p>
+            {% endif %}
+
+            <!-- Assign form or limit message -->
+            {% if not r.at_limit %}
+            <form action="/auto_assign/{{ r.id }}" method="post" class="space-y-2"
+                  onsubmit="return validateSmartAssign(this)">
+              <input type="hidden" name="category" value="{{ r.best_category }}">
+              <div class="flex gap-2">
+                <input name="task" placeholder="Task description…" required
+                       class="flex-1 min-w-0 text-xs border border-gray-200 rounded-lg px-3 py-2
+                              focus:ring-1 focus:ring-black focus:outline-none placeholder-gray-400" />
+                <input type="date" name="deadline" required
+                       class="text-xs border border-gray-200 rounded-lg px-2 py-2
+                              focus:ring-1 focus:ring-black focus:outline-none" />
+              </div>
+              <button type="submit"
+                      class="w-full bg-black text-white text-xs font-bold py-2 rounded-lg
+                             hover:bg-neutral-800 transition-all flex items-center justify-center gap-1">
+                Assign to {{ r.name.split()[0] }}
+                <span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+              </button>
+            </form>
+            {% else %}
+            <div class="text-center text-[11px] text-red-500 border border-red-100 bg-red-50 rounded-lg py-2.5 font-medium">
+              Weekly limit reached — await task completions
+            </div>
+            {% endif %}
+          </div>
+          {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Empty state (no employees) -->
+        {% if not recommendations %}
+        <div class="bg-gray-50 border border-border-soft rounded-xl py-14 text-center">
+          <span class="material-symbols-outlined text-4xl text-gray-300">group_off</span>
+          <p class="text-sm text-gray-400 mt-3">No employees yet. Add team members to get recommendations.</p>
+        </div>
+        {% endif %}
+
+        <!-- View All / Show Less toggle (only shown when > 6 employees) -->
+        {% if recommendations | length > 6 %}
+        <div class="flex justify-center pt-2" id="rec-toggle-wrap">
+          <button id="rec-toggle-btn"
+                  onclick="toggleAllRecs()"
+                  class="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-gray-200
+                         text-sm font-bold text-gray-600 bg-white hover:bg-gray-50 hover:border-black
+                         hover:text-black transition-all shadow-sm">
+            <span class="material-symbols-outlined text-[16px]" id="rec-toggle-icon">expand_more</span>
+            <span id="rec-toggle-label">View all {{ recommendations | length }} employees</span>
+          </button>
+        </div>
+        {% endif %}
       </div>
 
 
@@ -401,7 +541,7 @@
           modal.classList.add('hidden');
         }
       </script>
-        <h3 class="text-lg font-bold">Team Oversight</h3>
+        <h3 class="text-lg font-bold" id="team">Team Oversight</h3>
       </div>
       <div class="bg-white border border-border-soft rounded-xl overflow-hidden shadow-sm">
         <table class="w-full text-left border-collapse">
@@ -556,6 +696,69 @@
         let d = new Date(raw);
         td.innerText = formatDateTime(d);
       });
+    </script>
+
+    <!-- Smart Recommendations: category filter + form validation -->
+    <script>
+      // ── Category filter tabs ──────────────────────────────────────────
+      document.querySelectorAll('.cat-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.cat-btn').forEach(b => {
+            b.classList.remove('bg-black', 'text-white');
+            b.classList.add('bg-white', 'border', 'border-gray-200', 'text-gray-500');
+          });
+          btn.classList.add('bg-black', 'text-white');
+          btn.classList.remove('bg-white', 'border', 'border-gray-200', 'text-gray-500');
+
+          const cat = btn.dataset.cat;
+          const expanded = !document.querySelector('.rec-extra[style*="none"]'); // are extras visible?
+          document.querySelectorAll('.rec-card').forEach(card => {
+            const catMatch = cat === 'all' || card.dataset.bestCat === cat;
+            // Respect extra-hidden state unless already expanded
+            const isExtra  = card.classList.contains('rec-extra');
+            card.style.display = (catMatch && (!isExtra || expanded)) ? '' : 'none';
+          });
+        });
+      });
+
+      // ── View All / Show Less toggle ───────────────────────────────────
+      let recsExpanded = false;
+      function toggleAllRecs() {
+        recsExpanded = !recsExpanded;
+        const icon  = document.getElementById('rec-toggle-icon');
+        const label = document.getElementById('rec-toggle-label');
+        const total = document.querySelectorAll('.rec-card').length;
+
+        // Respect active category filter when expanding
+        const activeBtn = document.querySelector('.cat-btn.bg-black');
+        const activeCat = activeBtn ? activeBtn.dataset.cat : 'all';
+
+        document.querySelectorAll('.rec-extra').forEach(card => {
+          const catMatch = activeCat === 'all' || card.dataset.bestCat === activeCat;
+          card.style.display = (recsExpanded && catMatch) ? '' : 'none';
+        });
+
+        if (recsExpanded) {
+          icon.textContent  = 'expand_less';
+          label.textContent = 'Show less';
+        } else {
+          icon.textContent  = 'expand_more';
+          label.textContent = `View all ${total} employees`;
+        }
+      }
+
+      // ── Validate smart assign forms ───────────────────────────────────
+      function validateSmartAssign(form) {
+        const task = form.task.value.trim();
+        const deadline = form.deadline.value;
+        if (!task) { alert('Please enter a task description.'); return false; }
+        if (!deadline) { alert('Please select a deadline.'); return false; }
+        const selectedDate = new Date(deadline);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        if (selectedDate < today) { alert('Deadline cannot be in the past.'); return false; }
+        return true;
+      }
     </script>
 
     <!--flash hide-->
